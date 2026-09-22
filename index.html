@@ -219,7 +219,7 @@ async function paginaGEA(out, base, font, dst){
 async function paginaOSU(out, base, font, dst){
   const [page] = await out.copyPages(base, [0]); out.addPage(page);
   const form = out.getForm(); const f = fechaPartes();
-  const Y = top => H - top - 13;  // renglón de puntos (top del texto) → y del campo
+  const Y = top => H - top - 8.5;  // renglón de puntos (top del texto) → y del campo
   campo(form,page,font,`${$("ap").value.toUpperCase()}, ${$("no").value}`,254,Y(238),302);
   campo(form,page,font,$("cuil").value,199,Y(258),360);
   campo(form,page,font,$("dni").value,84,Y(279),470);
