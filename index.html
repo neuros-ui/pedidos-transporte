@@ -50,6 +50,14 @@
         <select id="tpl">
           <option value="gea">GEA · Prescripción Médica Transporte 2026</option>
           <option value="osuthgra">OSUTHGRA · Anexo IX Pedido Médico Transporte</option>
+          <option value="sipssa">OSCEP / SIPSSA</option>
+          <option value="prevencion">PREVENCIÓN SALUD · Justificación médica</option>
+          <option value="ossoelsac">OSSOELSAC · Formulario N° 9</option>
+          <option value="osssb">OSSSB · Orden médica transporte</option>
+          <option value="medicus">MEDICUS · Orden médica año 2026</option>
+          <option value="osblyca">OSBLYCA · Prescripción médica discapacidad</option>
+          <option value="omint">OMINT · Formulario 051</option>
+          <option value="nota">Nota en hoja membretada (genérica)</option>
         </select>
       </div>
       <div class="full" id="tplMsg"></div>
@@ -67,9 +75,11 @@
         <select id="dest"><option>Rehabilitación</option><option>Escuela</option><option>Ambos</option></select></div>
       <div class="full"><label>Domicilio de la casa (calle)</label><input id="casaCalle"></div>
       <div><label>Número</label><input id="casaNum"></div>
+      <div><label>Barrio</label><input id="casaBarrio"></div>
       <div><label>Localidad</label><input id="casaLoc" value="Córdoba"></div>
       <div class="full"><label>Domicilio de la escuela (calle)</label><input id="escCalle"></div>
       <div><label>Número</label><input id="escNum"></div>
+      <div><label>Barrio</label><input id="escBarrio"></div>
       <div><label>Localidad</label><input id="escLoc" value="Córdoba"></div>
       <div><label>Nombre de la escuela</label><input id="escNombre" placeholder="Ej.: Escuela Especial …"></div>
     </div>
@@ -108,7 +118,7 @@
       <button id="gen">📄 Descargar PDF del pedido</button>
       <a class="btn wa" id="wa" target="_blank" rel="noopener">💬 Abrir WhatsApp</a>
     </div>
-    <p class="hint">El PDF queda con los campos editables: se puede corregir en cualquier lector de PDF antes de la firma y el sello del médico. Después volvé a la lista y marcá el estado del pedido.</p>
+    <p class="hint">Al descargar se abre "Guardar como": la primera vez elegí la carpeta compartida (TRANSPORTES LISTOS PARA ENTREGAR) y Chrome la recuerda para las próximas. El PDF queda con los campos editables hasta que la doctora lo firme. Después volvé a la lista y tocá "Pedido hecho".</p>
   </div>
 </main>
 
@@ -117,8 +127,15 @@
 // ── Configuración ───────────────────────────────────────────────
 const NEUROS = { calle: "Av. Colón (B° Las Palmas)", numero: "4405", localidad: "Córdoba" }; // dirección del centro
 const PLANTILLA_POR_OS = {
+  // Formulario propio de la obra social
   "OSTACC":"gea","OSPEJ":"gea","OSPENA":"gea","OSSACRA":"gea","GEA SA":"gea",
-  "OSUTHGRA":"osuthgra"
+  "OSUTHGRA":"osuthgra",
+  // Nota en hoja membretada de NEUROS (no tienen formulario propio)
+  "OSMTT (SERVIRED)":"nota","OSPECON":"nota","OSPEVIC":"nota","SANIDAD":"nota",
+  "OSME (UNIMED)":"nota","OSPIC":"nota","IOSFA":"nota","OSSURRBAC":"nota",
+  "OSDE":"nota","OSPRERA":"nota","OSPATRONES":"nota","OSTPCPHYARA (PASTELEROS)":"nota",
+  // Formularios propios con campos posicionados
+  "OSCEP (SIPSSA)":"sipssa","MEDICUS":"medicus","PREVENCION SALUD":"prevencion","OSSOELSAC":"ossoelsac","OSSSB":"osssb","OSBLYCA (SERVIRED)":"osblyca","OMINT":"omint"
 };
 const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
@@ -130,13 +147,26 @@ const get = k => (P.get(k) || "").trim();
 $("ap").value = get("ap"); $("no").value = get("no"); $("dni").value = get("dni");
 $("af").value = get("af"); $("os").value = get("os");
 $("casaCalle").value = get("casa"); $("escCalle").value = get("esc");
+$("casaNum").value = get("casaNum"); $("casaBarrio").value = get("casaBarrio");
+if (get("casaLoc")) $("casaLoc").value = get("casaLoc");
+$("escNum").value = get("escNum"); $("escBarrio").value = get("escBarrio");
+if (get("escLoc")) $("escLoc").value = get("escLoc");
+if (get("fnac")) { const d = new Date(get("fnac") + "T12:00"); if (!isNaN(d)) {
+  let e = new Date().getFullYear() - d.getFullYear();
+  const m = new Date().getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && new Date().getDate() < d.getDate())) e--;
+  $("edad").value = e >= 0 && e < 120 ? String(e) : "";
+} }
+if (get("sexo")) $("sexo").value = { "F":"Femenino", "M":"Masculino", "X - no binario":"X" }[get("sexo")] || get("sexo");
 if (get("dest")) $("dest").value = get("dest");
 $("neuCalle").value = NEUROS.calle; $("neuNum").value = NEUROS.numero; $("neuLoc").value = NEUROS.localidad;
 $("fecha").valueAsDate = new Date(Date.now() - new Date().getTimezoneOffset()*60000);
 
+const sinTilde = t => (t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase();
+const MAPA_OS = Object.fromEntries(Object.entries(PLANTILLA_POR_OS).map(([k,v]) => [sinTilde(k), v]));
 function elegirPlantilla(){
   const os = $("os").value.trim().toUpperCase();
-  const t = PLANTILLA_POR_OS[os];
+  const t = MAPA_OS[sinTilde(os)];
   if (t){ $("tpl").value = t; $("tplMsg").innerHTML = `<span class="pill ok">Plantilla asignada a ${os}</span>`; }
   else { $("tplMsg").innerHTML = `<span class="pill warn">${os || "Esta obra social"} todavía no tiene plantilla asignada: elegí una a mano.</span>`; }
 }
@@ -186,8 +216,8 @@ function fechaPartes(){
 }
 function destinos(){
   const d = $("dest").value;
-  const rehab = { nombre: "Rehabilitación - Centro NEUROS", calle: $("neuCalle").value, num: $("neuNum").value, loc: $("neuLoc").value };
-  const esc = { nombre: $("escNombre").value || "Escuela", calle: $("escCalle").value, num: $("escNum").value, loc: $("escLoc").value };
+  const rehab = { nombre: "Rehabilitación - Centro NEUROS", calle: $("neuCalle").value, num: $("neuNum").value, barrio: "", loc: $("neuLoc").value };
+  const esc = { nombre: $("escNombre").value || "Escuela", calle: $("escCalle").value, num: $("escNum").value, barrio: $("escBarrio").value, loc: $("escLoc").value };
   return d === "Ambos" ? [rehab, esc] : d === "Escuela" ? [esc] : [rehab];
 }
 const H = 841.89;
@@ -219,7 +249,7 @@ async function paginaGEA(out, base, font, dst){
 async function paginaOSU(out, base, font, dst){
   const [page] = await out.copyPages(base, [0]); out.addPage(page);
   const form = out.getForm(); const f = fechaPartes();
-  const Y = top => H - top - 8.5;  // renglón de puntos (top del texto) → y del campo
+  const Y = top => H - top - 8.5;  // renglón de puntos: el texto queda apoyado arriba de los puntos
   campo(form,page,font,`${$("ap").value.toUpperCase()}, ${$("no").value}`,254,Y(238),302);
   campo(form,page,font,$("cuil").value,199,Y(258),360);
   campo(form,page,font,$("dni").value,84,Y(279),470);
@@ -235,25 +265,245 @@ async function paginaOSU(out, base, font, dst){
   campo(form,page,font,f.d,80,Y(733),30); campo(form,page,font,f.mm,114,Y(733),35); campo(form,page,font,f.y,153,Y(733),48);
 }
 
+// ── Motor genérico de plantillas ────────────────────────────────
+// Cada plantilla es una tabla de campos: dónde va cada dato sobre el PDF.
+// v  = qué dato escribir   x = izquierda   top = renglón (medido desde arriba)
+// w  = ancho   s = tamaño de letra   dy = corrección fina vertical
+// tops = varios renglones para un texto largo (se parte solo)
+const PLANTILLAS = {
+  sipssa: { archivo:"plantilla_sipssa.pdf", dy:-9, campos:[
+    {v:"fd",x:462,top:120,w:28},{v:"fmm",x:496,top:120,w:28},{v:"fy",x:529,top:120,w:26},
+    {v:"paciente",x:120,top:155,w:304},
+    {v:"dni",x:63,top:171,w:138},
+    {v:"edad",x:66,top:186,w:50},
+    {v:"dx",x:93,top:202,w:442,tops:[202,214],xs:[93,40],ws:[442,496]},
+    {v:"prestacion",x:40,top:322,w:498,tops:[322,344],ws:[498,498]},
+    {v:"just",x:40,top:519,w:498,tops:[519,541,563,585,607,629],ws:[498,498,498,498,498,498]},
+    {v:"depSi",x:107,top:669,w:10},{v:"depNo",x:142,top:669,w:10},
+    {v:"desde",x:71,top:731,w:104},{v:"hasta",x:211,top:731,w:104}
+  ]},
+  prevencion: { archivo:"plantilla_prevencion.pdf", campos:[
+    {v:"os",x:125,top:153.7,w:170,dy:8.5},
+    {v:"fd",x:350,top:153.7,w:18,s:9,dy:8.5},{v:"fmm",x:381,top:153.7,w:18,s:9,dy:8.5},{v:"fy",x:415,top:153.7,w:30,s:9,dy:8.5},
+    {v:"no",x:106,top:184.1,w:188,dy:8.5},{v:"ap",x:356,top:184.1,w:190,dy:8.5},
+    {v:"af",x:156,top:214.3,w:82,s:9,dy:8.5},{v:"tipoDoc",x:314,top:214.3,w:42,s:9,dy:8.5},{v:"dni",x:461,top:214.3,w:85,s:9,dy:8.5},
+    {v:"edad",x:92,top:244.7,w:40,dy:8.5},{v:"sexo",x:340,top:244.7,w:100,dy:8.5},
+    {v:"dx",x:118,top:274.6,w:268,tops:[274.6,296.2],xs:[118,53],ws:[268,483],dy:0},
+    {v:"just",x:436,top:317.1,w:100,tops:[317.1,338.4,359.3],xs:[436,53,53],ws:[100,483,483],dy:0},
+    {v:"casa",x:169,top:422.6,w:362,dy:0},
+    {v:"dest",x:161,top:443.5,w:370,dy:0},
+    {v:"prestacionCorta",x:181,top:464.4,w:358,dy:0},
+    {tipo:"circ",v:"depSi",cx:126,top:648,rx:6,ry:6},{tipo:"circ",v:"depNo",cx:162.7,top:648,rx:6,ry:6},
+    {v:"desde",x:150,top:678.2,w:132,dy:0},{v:"hasta",x:328,top:678.2,w:98,dy:0},{v:"fy",x:470,top:678.2,w:70,dy:0}
+  ]},
+  ossoelsac: { archivo:"plantilla_ossoelsac.pdf", dy:-2, campos:[
+    {v:"fd",x:497,top:203,w:13,s:8,dy:5},{v:"fmm",x:514,top:203,w:13,s:8,dy:5},{v:"fy",x:530,top:203,w:16,s:7,dy:5},
+    {v:"no",x:33,top:242,w:163,s:9,dy:1},{v:"ap",x:204,top:242,w:190,s:9,dy:1},
+    {v:"af",x:33,top:269,w:175,s:9,dy:1},{v:"tipoDoc",x:216,top:269,w:20,s:8,dy:1},
+    {v:"dni",x:244,top:269,w:95,s:9,dy:1},{v:"edad",x:348,top:269,w:20,s:8,dy:1},{v:"sexoL",x:376,top:269,w:20,s:8,dy:1},
+    {v:"just",x:32,top:340,w:520,tops:[340,358],ws:[520,520],dy:3},
+    {v:"casa",x:330,top:399,w:225,dy:2},
+    {v:"dest",x:128,top:420,w:420,dy:2},
+    {v:"desde",x:152,top:441,w:130,dy:2},{v:"hasta",x:326,top:441,w:130,dy:2},{v:"fy",x:495,top:441,w:50,dy:2},
+    {v:"dx",x:84,top:463,w:466,tops:[463,503],xs:[84,72],ws:[466,480],dy:2}
+  ]},
+  osssb: { archivo:"plantilla_osssb.pdf", H:792, dy:-8.5, campos:[
+    {v:"os",x:137,top:58,w:150},
+    {v:"fd",x:424,top:58,w:26},{v:"fmm",x:458,top:58,w:24},{v:"fy",x:490,top:58,w:34},
+    {v:"no",x:80,top:110,w:135,s:9},{v:"ap",x:224,top:110,w:135,s:9},{v:"af",x:369,top:110,w:170,s:9},
+    {v:"tipoDoc",x:80,top:146,w:100,s:9},{v:"dni",x:188,top:146,w:100,s:9},{v:"edad",x:297,top:146,w:60,s:9},
+    {v:"dx",x:128,top:189,w:278,tops:[189,205],xs:[128,61],ws:[278,346]},
+    {v:"prestacionCorta",x:167,top:221,w:275},
+    {v:"casa",x:96,top:241,w:292},
+    {v:"dest",x:96,top:258,w:295},
+    {v:"desde",x:148,top:273,w:80},{v:"hasta",x:247,top:273,w:80},{v:"fy",x:366,top:273,w:28},
+    {tipo:"circ",v:"depSi",cx:192,top:537,rx:9,ry:7},{tipo:"circ",v:"depNo",cx:215,top:537,rx:11,ry:7}
+  ]},
+  medicus: { archivo:"plantilla_medicus.pdf", dy:-2, campos:[
+    {v:"fd",x:370,top:193,w:44},{v:"fmm",x:424,top:193,w:52},{v:"fy",x:489,top:193,w:60},
+    {v:"paciente",x:155,top:216,w:390},
+    {v:"af",x:130,top:252,w:210},{v:"dni",x:383,top:252,w:160},
+    {v:"dx",x:137,top:288,w:420,tops:[288,308],xs:[137,73],ws:[420,484]},
+    {v:"prestacion",x:198,top:333,w:358,tops:[333,353,373],xs:[198,73,73],ws:[358,484,484]},
+    {v:"just",x:73,top:417,w:484,tops:[417,435,453,471],ws:[484,484,484,484]},
+    {tipo:"circ",v:"depSi",cx:128,top:492,rx:9,ry:7},{tipo:"circ",v:"depNo",cx:145,top:492,rx:10,ry:7},
+    {v:"desde",x:145,top:554,w:150},{v:"hasta",x:342,top:554,w:200}
+  ]},
+  osblyca: { archivo:"plantilla_osblyca.pdf", H:792, dy:-2, campos:[
+    {v:"fd",x:432,top:106,w:32,dy:-9},{v:"fmm",x:474,top:106,w:24,dy:-9},{v:"fy",x:506,top:106,w:54,dy:-9},
+    {v:"paciente",x:115,top:158,w:360},{v:"dni",x:500,top:158,w:200},
+    {v:"dx",x:90,top:192,w:430,tops:[192,212],ws:[430,430]},
+    {v:"prestacion",x:90,top:356,w:430,tops:[356,376,396],ws:[430,430,430]},
+    {v:"just",x:90,top:424,w:430,tops:[424,444,464,484,504],ws:[430,430,430,430,430]},
+    {v:"desde",x:125,top:582,w:180,dy:-9},{v:"hasta",x:360,top:582,w:180,dy:-9}
+  ]},
+  omint: { archivo:"plantilla_omint.pdf", dy:-2, campos:[
+    {v:"fecha",x:392,top:158,w:140},
+    {v:"paciente",x:40,top:230,w:310},{v:"dni",x:362,top:230,w:195},
+    {v:"just",x:36,top:269,w:520,tops:[272,283,294,305,316],ws:[520,520,520,520,520],s:9,dy:-8},
+    {v:"dx",x:36,top:359,w:520,tops:[359,370],ws:[520,520],s:9,dy:-8},
+    {v:"prestacion",x:36,top:449,w:520,tops:[449,460],ws:[520,520],s:9,dy:-8},
+    {v:"depSi",x:34,top:604,w:10},{v:"depNo",x:74,top:604,w:10},
+    {v:"desde",x:70,top:654,w:70},{v:"hasta",x:175,top:654,w:68},{v:"fy",x:270,top:654,w:60}
+  ]}
+};
+
+function valores(dst){
+  const f = fechaPartes();
+  const con = document.querySelector('input[name=dep]:checked').value === "con";
+  const dom = v => [v.calle, v.num, v.barrio, v.loc].filter(Boolean).join(", ");
+  const casa = dom({calle:$("casaCalle").value,num:$("casaNum").value,barrio:$("casaBarrio").value,loc:$("casaLoc").value});
+  return {
+    paciente: `${$("ap").value.toUpperCase()}, ${$("no").value}`,
+    ap:$("ap").value.toUpperCase(), no:$("no").value, dni:$("dni").value, af:$("af").value,
+    edad:$("edad").value, sexo:$("sexo").value, os:$("os").value,
+    dxE:$("dxEtio").value, dxF:$("dxFunc").value,
+    dx:[$("dxEtio").value,$("dxFunc").value].filter(Boolean).join(" / "),
+    casa, destNombre:dst.nombre, dest:dom(dst),
+    prestacion:`Transporte especial desde su domicilio (${casa}) hasta ${dst.nombre}`
+      + `${dom(dst) ? ", " + dom(dst) : ""}, ida y vuelta, de lunes a viernes.`
+      + ` ${con ? "Con dependencia." : "Sin dependencia."}`,
+    prestacionCorta:`Transporte especial ida y vuelta, de lunes a viernes.`,
+    just:$("just").value,
+    desde:$("desde").value.replace(/\s*(de\s*)?20\d\d\s*$/i,""),
+    hasta:$("hasta").value.replace(/\s*(de\s*)?20\d\d\s*$/i,""),
+    fd:f.d, fm:f.m, fmm:f.mm, fy:f.y, fecha:`${f.d}/${f.mm}/${f.y}`,
+    depSi: con ? "X" : "", depNo: con ? "" : "X",
+    tipoDoc:"DNI", sexoL:($("sexo").value||"").slice(0,1).toUpperCase()
+  };
+}
+
+async function paginaTabla(out, base, font, dst, fontB, tpl){
+  const def = PLANTILLAS[tpl];
+  const [page] = await out.copyPages(base, [0]); out.addPage(page);
+  const form = out.getForm();
+  const alto = def.H || 841.89;
+  const V = valores(dst);
+  for (const c of def.campos){
+    if (c.tipo === "circ"){
+      if (V[c.v]) page.drawEllipse({ x: c.cx, y: alto - c.top, xScale: c.rx || 11, yScale: c.ry || 7,
+                                     borderColor: rgb(0.05,0.1,0.35), borderWidth: 1.2 });
+      continue;
+    }
+    const size = c.s || 10;
+    const dy = c.dy !== undefined ? c.dy : (def.dy !== undefined ? def.dy : -2);
+    const texto = V[c.v] || "";
+    if (c.tops){
+      const anchos = c.ws || c.tops.map(() => c.w);
+      const xs = c.xs || c.tops.map(() => c.x);
+      partir(font, size, texto, anchos).forEach((l, i) => {
+        campo(form, page, font, l, xs[i], alto - c.tops[i] + dy, anchos[i], 13, size);
+      });
+    } else {
+      campo(form, page, font, texto, c.x, alto - c.top + dy, c.w, 13, size);
+    }
+  }
+}
+
+// ── Nota genérica en hoja membretada ────────────────────────────
+// Para las obras sociales que no tienen formulario propio. Se imprime en la
+// hoja con membrete de NEUROS, por eso arriba y abajo queda espacio libre.
+async function paginaNota(out, base, font, dst, fontB){
+  const page = out.addPage([595.28, 841.89]);
+  const form = out.getForm(); const f = fechaPartes();
+  const IZQ = 62, ANCHO = 471;
+  const tinta = rgb(0.11,0.15,0.18);
+  let y = 700;                                  // deja ~140 pt para el membrete
+  const rotulo = (t, x, yy, size = 10) => page.drawText(t, { x, y: yy, size, font: fontB, color: tinta });
+  const texto  = (t, x, yy, size = 10) => page.drawText(t, { x, y: yy, size, font, color: tinta });
+
+  texto(`Córdoba, ${f.d} de ${f.m} de ${f.y}`, IZQ, y); y -= 34;
+
+  rotulo("Paciente:", IZQ, y);
+  campo(form,page,font,`${$("ap").value.toUpperCase()}, ${$("no").value}`, IZQ+62, y-3, ANCHO-62); y -= 21;
+
+  rotulo("Documento:", IZQ, y);
+  campo(form,page,font,$("dni").value, IZQ+72, y-3, 120);
+  rotulo("Edad:", IZQ+210, y);
+  campo(form,page,font,$("edad").value, IZQ+245, y-3, 50);
+  rotulo("Sexo:", IZQ+310, y);
+  campo(form,page,font,$("sexo").value, IZQ+345, y-3, 126); y -= 21;
+
+  rotulo("Obra social:", IZQ, y);
+  campo(form,page,font,$("os").value, IZQ+75, y-3, 200);
+  rotulo("N° de afiliado:", IZQ+290, y);
+  campo(form,page,font,$("af").value, IZQ+375, y-3, 96); y -= 21;
+
+  rotulo("Diagnóstico:", IZQ, y);
+  const dx = [$("dxEtio").value, $("dxFunc").value].filter(Boolean).join(" / ");
+  const [dx1, dx2] = partir(font, 10, dx, [ANCHO-78, ANCHO]);
+  campo(form,page,font,dx1, IZQ+78, y-3, ANCHO-78); y -= 18;
+  campo(form,page,font,dx2, IZQ, y-3, ANCHO); y -= 30;
+
+  rotulo("SOLICITO:", IZQ, y); y -= 20;
+  const con = document.querySelector('input[name=dep]:checked').value === "con";
+  const pedido = `Transporte especial desde su domicilio hasta ${dst.nombre}, ida y vuelta, `
+               + `de lunes a viernes. ${con ? "Con dependencia." : "Sin dependencia."}`;
+  partir(font, 10, pedido, [ANCHO, ANCHO]).forEach(l => { campo(form,page,font,l, IZQ, y-3, ANCHO); y -= 18; });
+  y -= 8;
+
+  const dom = v => [v.calle, v.num, v.barrio, v.loc].filter(Boolean).join(", ");
+  rotulo("Domicilio del paciente:", IZQ, y);
+  campo(form,page,font,dom({calle:$("casaCalle").value,num:$("casaNum").value,barrio:$("casaBarrio").value,loc:$("casaLoc").value}),
+        IZQ+128, y-3, ANCHO-128); y -= 21;
+  rotulo("Domicilio de destino:", IZQ, y);
+  campo(form,page,font,dom(dst), IZQ+128, y-3, ANCHO-128); y -= 21;
+
+  rotulo("Período:", IZQ, y);
+  texto("de", IZQ+55, y);
+  campo(form,page,font,$("desde").value.replace(/\s*(de\s*)?20\d\d\s*$/i,""), IZQ+75, y-3, 130);
+  texto("a", IZQ+212, y);
+  campo(form,page,font,$("hasta").value.replace(/\s*(de\s*)?20\d\d\s*$/i,""), IZQ+228, y-3, 130);
+  texto("de", IZQ+365, y);
+  campo(form,page,font,f.y, IZQ+385, y-3, 50); y -= 32;
+
+  rotulo("Justificación médica:", IZQ, y); y -= 20;
+  partir(font, 10, $("just").value, [ANCHO, ANCHO, ANCHO, ANCHO, ANCHO])
+    .forEach(l => { campo(form,page,font,l, IZQ, y-3, ANCHO); y -= 18; });
+
+  // Firma: siempre a la misma altura, arriba del pie del membrete
+  page.drawLine({ start: { x: 330, y: 190 }, end: { x: 533, y: 190 }, thickness: 0.8, color: tinta });
+  page.drawText("Firma y sello del médico tratante", { x: 348, y: 176, size: 9, font, color: tinta });
+}
+
 // ── Generar ─────────────────────────────────────────────────────
 $("gen").addEventListener("click", async () => {
   const btn = $("gen"); btn.disabled = true; btn.textContent = "Generando…"; $("err").style.display = "none";
   try {
     if (!$("ap").value.trim()) throw new Error("Falta el apellido del paciente.");
     const tpl = $("tpl").value;
-    const bytes = await (await fetch(tpl === "gea" ? "plantilla_gea.pdf" : "plantilla_osuthgra.pdf")).arrayBuffer();
-    const base = await PDFDocument.load(bytes);
     const out = await PDFDocument.create();
     const font = await out.embedFont(StandardFonts.Helvetica);
+    const fontB = await out.embedFont(StandardFonts.HelveticaBold);
+    let base = null, archivo = null;
+    if (tpl === "gea") archivo = "plantilla_gea.pdf";
+    else if (tpl === "osuthgra") archivo = "plantilla_osuthgra.pdf";
+    else if (PLANTILLAS[tpl]) archivo = PLANTILLAS[tpl].archivo;
+    if (archivo) base = await PDFDocument.load(await (await fetch(archivo)).arrayBuffer());
+    const armar = tpl === "gea" ? paginaGEA : tpl === "osuthgra" ? paginaOSU
+                : PLANTILLAS[tpl] ? (o,b,f,d,fb) => paginaTabla(o,b,f,d,fb,tpl) : paginaNota;
     n = 0;
-    for (const dst of destinos()) await (tpl === "gea" ? paginaGEA : paginaOSU)(out, base, font, dst);
+    for (const dst of destinos()) await armar(out, base, font, dst, fontB);
     out.getForm().updateFieldAppearances(font);
     const pdf = await out.save();
     const limpio = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"").toUpperCase();
-    const nombre = `PEDIDO_TRANSPORTE_${fechaPartes().y}_${limpio($("os").value || tpl)}_${limpio($("ap").value)}_${limpio($("no").value)}_${limpio($("dest").value)}.pdf`;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([pdf], { type: "application/pdf" }));
-    a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+    // Nombre del archivo: primero la obra social, así en la carpeta quedan agrupados por obra social
+    const nombre = `${limpio($("os").value || tpl)}_${limpio($("ap").value)}_${limpio($("no").value)}_${limpio($("dest").value)}_${fechaPartes().y}.pdf`;
+    const blob = new Blob([pdf], { type: "application/pdf" });
+    // Guarda en la carpeta compartida: la primera vez se elige, después Chrome la recuerda
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await showSaveFilePicker({
+          id: "pedidosTransporteNEUROS", suggestedName: nombre,
+          types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }]
+        });
+        const w = await handle.createWritable(); await w.write(blob); await w.close();
+      } catch (e) { if (e.name !== "AbortError") throw e; }
+    } else {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+    }
   } catch (e) {
     $("err").textContent = "No se pudo generar el PDF: " + e.message; $("err").style.display = "block";
   } finally { btn.disabled = false; btn.textContent = "📄 Descargar PDF del pedido"; }
