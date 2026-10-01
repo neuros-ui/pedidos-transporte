@@ -48,13 +48,17 @@
       <div><label>Obra social</label><input id="os"></div>
       <div><label>Plantilla a usar</label>
         <select id="tpl">
-          <option value="gea">GEA · Prescripción Médica Transporte 2026</option>
+          <option value="">— Elegí la plantilla —</option>
+          <option value="gea">GEA · Prescripción Médica Transporte 2027</option>
           <option value="osuthgra">OSUTHGRA · Anexo IX Pedido Médico Transporte</option>
-          <option value="sipssa">OSCEP / SIPSSA</option>
+          <option value="ospe">OSPE · Solicitud de transporte para discapacidad</option>
+          <option value="osguin">OSGUIN · Anexo 3 Solicitud de transporte</option>
+          <option value="ospical">OSPICAL · Solicitud de transporte (Ley 24901)</option>
+          <option value="ospav">OSPAV · Planilla 3 Solicitante de transporte</option>
+          <option value="medife">MEDIFÉ · Orden médica por transporte (Formulario 5)</option>
           <option value="prevencion">PREVENCIÓN SALUD · Justificación médica</option>
           <option value="ossoelsac">OSSOELSAC · Formulario N° 9</option>
           <option value="osssb">OSSSB · Orden médica transporte</option>
-          <option value="medicus">MEDICUS · Orden médica año 2026</option>
           <option value="osblyca">OSBLYCA · Prescripción médica discapacidad</option>
           <option value="omint">OMINT · Formulario 051</option>
           <option value="nota">Nota en hoja membretada (genérica)</option>
@@ -93,15 +97,36 @@
       <div><label>Sexo</label><select id="sexo"><option></option><option>Femenino</option><option>Masculino</option><option>X</option></select></div>
       <div class="full"><label>Diagnóstico etiológico</label><input id="dxEtio"></div>
       <div class="full"><label>Diagnóstico funcional</label><input id="dxFunc"></div>
+      <div><label>DSM IV – CIE X <span style="font-weight:400">(consignar los ejes)</span></label><input id="dsm"></div>
+      <div><label>Deficiencia</label><input id="defic"></div>
       <div class="full"><label>Justificación médica de la solicitud</label>
         <textarea id="just" placeholder="Motivo relacionado con su discapacidad por el que no puede usar el transporte público. Si pide dependencia, indicar los apoyos que brindaría el transportista."></textarea></div>
       <div><label>Dependencia</label>
         <div class="radio"><label><input type="radio" name="dep" value="con"> Con</label><label><input type="radio" name="dep" value="sin" checked> Sin</label></div></div>
-      <div><label>Período desde</label><input id="desde" placeholder="Ej.: Marzo 2026"></div>
-      <div><label>Período hasta</label><input id="hasta" placeholder="Ej.: Diciembre 2026"></div>
+      <div><label id="labDesde">Período desde</label><input id="desde" placeholder="Ej.: Marzo 2026"></div>
+      <div><label id="labHasta">Período hasta</label><input id="hasta" placeholder="Ej.: Diciembre 2026"></div>
       <div><label>Fecha del pedido</label><input id="fecha" type="date"></div>
+      <div id="perEsc1" style="display:none"><label>Período de la escuela / CET / centro de día — desde</label><input id="desde2" placeholder="Ej.: Marzo 2026"></div>
+      <div id="perEsc2" style="display:none"><label>Período de la escuela / CET / centro de día — hasta</label><input id="hasta2" placeholder="Ej.: Diciembre 2026"></div>
     </div>
-    <p class="hint">Si el destino es "Ambos", se genera una hoja para Rehabilitación y otra para la Escuela, porque cada obra social pide un formulario por prestación.</p>
+    <p class="hint">Si el destino es "Ambos", se genera una hoja para Rehabilitación y otra para la Escuela, porque cada obra social pide un formulario por prestación. Cada hoja puede llevar su propio período: si los dos son iguales, dejá vacíos los campos de la escuela.</p>
+  </div>
+
+  <div class="card" id="cardLab" style="display:none">
+    <h2>Datos laborales de los padres</h2>
+    <div class="grid">
+      <div><label>Nombre del padre</label><input id="padre"></div>
+      <div><label>Actividad laboral del padre</label><input id="padreAct"></div>
+      <div><label>Turno / horario del padre</label><input id="padreTurno"></div>
+      <div><label>Nombre de la madre</label><input id="madre"></div>
+      <div><label>Actividad laboral de la madre</label><input id="madreAct"></div>
+      <div><label>Turno / horario de la madre</label><input id="madreTurno"></div>
+      <div><label>Entre qué calles vive</label><input id="entre" placeholder="Ej.: entre Sarmiento y Rivadavia"></div>
+      <div><label>Código postal</label><input id="cp"></div>
+      <div class="full"><label>Hermanos <span style="font-weight:400">(uno por renglón: Nombre - edad - actividad - turno)</span></label>
+        <textarea id="hermanos" placeholder="Juan Pérez - 12 - Escuela Belgrano - tarde&#10;Ana Pérez - 8 - Escuela Belgrano - mañana"></textarea></div>
+    </div>
+    <p class="hint">Estos datos los pide sólo un grupo de obras sociales (OSPE, OSGUIN, OSPECOR, OSPICAL y OSPAV). Vienen de la última sección del formulario.</p>
   </div>
 
   <div class="card">
@@ -134,8 +159,9 @@ const PLANTILLA_POR_OS = {
   "OSMTT (SERVIRED)":"nota","OSPECON":"nota","OSPEVIC":"nota","SANIDAD":"nota",
   "OSME (UNIMED)":"nota","OSPIC":"nota","IOSFA":"nota","OSSURRBAC":"nota",
   "OSDE":"nota","OSPRERA":"nota","OSPATRONES":"nota","OSTPCPHYARA (PASTELEROS)":"nota",
+  "OSECAC":"nota","OSPJTAP":"nota",
   // Formularios propios con campos posicionados
-  "OSCEP (SIPSSA)":"sipssa","MEDICUS":"medicus","PREVENCION SALUD":"prevencion","OSSOELSAC":"ossoelsac","OSSSB":"osssb","OSBLYCA (SERVIRED)":"osblyca","OMINT":"omint"
+  "OSPE":"ospe","OSGUIN (SERVIRED)":"osguin","OSGUIN":"osguin","OSPAV":"ospav","OSPICAL":"ospical","MEDIFE":"medife","PREVENCION SALUD":"prevencion","OSSOELSAC":"ossoelsac","OSSSB":"osssb","OSBLYCA (SERVIRED)":"osblyca","OMINT":"omint"
 };
 const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
@@ -151,26 +177,40 @@ $("casaNum").value = get("casaNum"); $("casaBarrio").value = get("casaBarrio");
 if (get("casaLoc")) $("casaLoc").value = get("casaLoc");
 $("escNum").value = get("escNum"); $("escBarrio").value = get("escBarrio");
 if (get("escLoc")) $("escLoc").value = get("escLoc");
+let FNAC = {d:"",m:"",y:""};
 if (get("fnac")) { const d = new Date(get("fnac") + "T12:00"); if (!isNaN(d)) {
+  FNAC = {d:String(d.getDate()).padStart(2,"0"), m:String(d.getMonth()+1).padStart(2,"0"), y:String(d.getFullYear())};
   let e = new Date().getFullYear() - d.getFullYear();
   const m = new Date().getMonth() - d.getMonth();
   if (m < 0 || (m === 0 && new Date().getDate() < d.getDate())) e--;
   $("edad").value = e >= 0 && e < 120 ? String(e) : "";
 } }
+["padre","padreAct","padreTurno","madre","madreAct","madreTurno","hermanos","entre","cp"].forEach(k => { if (get(k)) $(k).value = get(k); });
 if (get("sexo")) $("sexo").value = { "F":"Femenino", "M":"Masculino", "X - no binario":"X" }[get("sexo")] || get("sexo");
 if (get("dest")) $("dest").value = get("dest");
 $("neuCalle").value = NEUROS.calle; $("neuNum").value = NEUROS.numero; $("neuLoc").value = NEUROS.localidad;
 $("fecha").valueAsDate = new Date(Date.now() - new Date().getTimezoneOffset()*60000);
 
+const FALTA_2027 = ["CAJA DE SANTA CRUZ","MEDICUS","OSPECOR","OSCEP (SIPSSA)","SIPSSA","NOBIS","OSPIM"];
 const sinTilde = t => (t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase();
 const MAPA_OS = Object.fromEntries(Object.entries(PLANTILLA_POR_OS).map(([k,v]) => [sinTilde(k), v]));
 function elegirPlantilla(){
   const os = $("os").value.trim().toUpperCase();
   const t = MAPA_OS[sinTilde(os)];
   if (t){ $("tpl").value = t; $("tplMsg").innerHTML = `<span class="pill ok">Plantilla asignada a ${os}</span>`; }
-  else { $("tplMsg").innerHTML = `<span class="pill warn">${os || "Esta obra social"} todavía no tiene plantilla asignada: elegí una a mano.</span>`; }
+  else if (FALTA_2027.map(sinTilde).includes(sinTilde(os))){
+    $("tpl").value = "";
+    $("tplMsg").innerHTML = `<span class="pill warn">Falta la plantilla <b>2027</b> de ${os}. Pedila a la obra social y avisale a Paola: la de 2026 ya no sirve.</span>`;
+  }
+  else { $("tpl").value = ""; $("tplMsg").innerHTML = `<span class="pill warn">${os || "Esta obra social"} todavía no tiene plantilla asignada: elegí una a mano.</span>`; }
 }
-elegirPlantilla(); $("os").addEventListener("change", elegirPlantilla);
+const CON_LABORALES = ["ospe","osguin","ospecor","ospical","ospav"];
+function verCardLab(){ $("cardLab").style.display = CON_LABORALES.includes($("tpl").value) ? "" : "none"; }
+elegirPlantilla(); verCardLab(); verPeriodoEsc();
+$("dest").addEventListener("change", verPeriodoEsc);
+$("os").addEventListener("change", () => { elegirPlantilla(); verCardLab(); verPeriodoEsc();
+$("dest").addEventListener("change", verPeriodoEsc); });
+$("tpl").addEventListener("change", verCardLab);
 
 // ── WhatsApp ────────────────────────────────────────────────────
 function waLink(){
@@ -214,10 +254,24 @@ function fechaPartes(){
   const d = $("fecha").value ? new Date($("fecha").value + "T12:00") : new Date();
   return { d: String(d.getDate()), m: MESES[d.getMonth()], mm: String(d.getMonth()+1).padStart(2,"0"), y: String(d.getFullYear()) };
 }
+const sinAnio = t => (t || "").replace(/\s*(de\s*)?20\d\d\s*$/i, "");
+function periodo(dst){
+  const esEsc = dst && dst.tipo === "esc";
+  const d = esEsc && $("desde2").value.trim() ? $("desde2").value : $("desde").value;
+  const h = esEsc && $("hasta2").value.trim() ? $("hasta2").value : $("hasta").value;
+  return { desde: d, hasta: h };
+}
+function verPeriodoEsc(){
+  const ambos = $("dest").value === "Ambos";
+  $("perEsc1").style.display = ambos ? "" : "none";
+  $("perEsc2").style.display = ambos ? "" : "none";
+  $("labDesde").textContent = ambos ? "Período de rehabilitación — desde" : "Período desde";
+  $("labHasta").textContent = ambos ? "Período de rehabilitación — hasta" : "Período hasta";
+}
 function destinos(){
   const d = $("dest").value;
-  const rehab = { nombre: "Rehabilitación - Centro NEUROS", calle: $("neuCalle").value, num: $("neuNum").value, barrio: "", loc: $("neuLoc").value };
-  const esc = { nombre: $("escNombre").value || "Escuela", calle: $("escCalle").value, num: $("escNum").value, barrio: $("escBarrio").value, loc: $("escLoc").value };
+  const rehab = { tipo:"rehab", nombre: "Rehabilitación - Centro NEUROS", calle: $("neuCalle").value, num: $("neuNum").value, barrio: "", loc: $("neuLoc").value };
+  const esc = { tipo:"esc", nombre: $("escNombre").value || "Escuela", calle: $("escCalle").value, num: $("escNum").value, barrio: $("escBarrio").value, loc: $("escLoc").value };
   return d === "Ambos" ? [rehab, esc] : d === "Escuela" ? [esc] : [rehab];
 }
 const H = 841.89;
@@ -242,7 +296,8 @@ async function paginaGEA(out, base, font, dst){
   campo(form,page,font,dst.nombre,330,Y(674.2),231);
   campo(form,page,font,dst.calle,83,Y(709.4),168,13,9); campo(form,page,font,dst.num,297,Y(709.3),48);
   campo(form,page,font,dst.loc,400,Y(709.3),161);
-  campo(form,page,font,$("desde").value.replace(/\s*(de\s*)?20\d\d\s*$/i,""),164,Y(733.9),169); campo(form,page,font,$("hasta").value.replace(/\s*(de\s*)?20\d\d\s*$/i,""),346,Y(733.9),60);
+  const pg = periodo(dst);
+  campo(form,page,font,sinAnio(pg.desde),164,Y(733.9),169); campo(form,page,font,sinAnio(pg.hasta),346,Y(733.9),60);
 }
 
 // ── Plantilla OSUTHGRA (Anexo IX) ───────────────────────────────
@@ -257,7 +312,8 @@ async function paginaOSU(out, base, font, dst){
   const [d1,d2] = partir(font,10,dx,[432,505]);
   campo(form,page,font,d1,123,Y(314),432); campo(form,page,font,d2,50,Y(329),505);
   campo(form,page,font,dst.nombre,158,Y(361),246);
-  campo(form,page,font,$("desde").value,213,Y(403),162); campo(form,page,font,$("hasta").value,412,Y(403),144);
+  const po = periodo(dst);
+  campo(form,page,font,po.desde,213,Y(403),162); campo(form,page,font,po.hasta,412,Y(403),144);
   const con = document.querySelector('input[name=dep]:checked').value === "con";
   page.drawEllipse({ x: con ? 132.5 : 156, y: H - 439, xScale: con ? 10 : 12, yScale: 8, borderColor: rgb(0.05,0.1,0.35), borderWidth: 1.2 });
   const rj=[516,547,578,609,625,640];
@@ -281,6 +337,138 @@ const PLANTILLAS = {
     {v:"just",x:40,top:519,w:498,tops:[519,541,563,585,607,629],ws:[498,498,498,498,498,498]},
     {v:"depSi",x:107,top:669,w:10},{v:"depNo",x:142,top:669,w:10},
     {v:"desde",x:71,top:731,w:104},{v:"hasta",x:211,top:731,w:104}
+  ]},
+  ospe: { archivo:"plantilla_ospe.pdf", dy:2, campos:[
+    {v:"paciente",x:124,top:131.6,w:443,s:9},
+    {v:"dni",x:99,top:163.6,w:124,s:9},{v:"af",x:303,top:163.6,w:150,s:9},
+    {v:"padreL",x:221,top:195.6,w:314,s:8},
+    {v:"madreL",x:223,top:227.6,w:312,s:8},
+    {v:"turnos",x:147,top:275.6,w:242,s:8},
+    {v:"h1",x:86,top:307.6,w:200,s:8},{v:"hAT1",x:346,top:307.6,w:192,s:8},
+    {v:"h2",x:86,top:323.6,w:200,s:8},{v:"hAT2",x:346,top:323.6,w:192,s:8},
+    {v:"h3",x:86,top:339.6,w:200,s:8},{v:"hAT3",x:346,top:339.6,w:192,s:8},
+    {v:"dxE",x:94,top:387.6,w:194,s:8},{v:"dsm",x:376,top:387.6,w:165,s:8},
+    {v:"defic",x:88,top:435.6,w:478,s:9},
+    {v:"just",x:28,top:505,w:540,tops:[505,525,545,565],ws:[540,540,540,540],s:9}
+  ]},
+  osguin: { archivo:"plantilla_osguin.pdf", dy:2, campos:[
+    {v:"fd",x:466,top:106.7,w:13,s:8},{v:"fmm",x:482,top:106.7,w:13,s:8},{v:"fy",x:498,top:106.7,w:24,s:8},
+    {v:"paciente",x:288,top:154.2,w:260,s:9},
+    {v:"dni",x:153,top:178,w:200,s:9},
+    {v:"padreMadre",x:271,top:201.8,w:240,tops:[201.8,220],xs:[271,90],ws:[240,420],s:8},
+    {v:"turnos",x:177,top:249.5,w:330,s:9},
+    {v:"hermNom",x:150,top:297.1,w:390,tops:[297.1,313],xs:[150,90],ws:[390,450],s:8},
+    {v:"hermAct",x:146,top:336.7,w:390,s:8},
+    {v:"hermTurnos",x:177,top:384.5,w:330,s:8},
+    {v:"dx",x:161,top:432,w:380,tops:[432,450],xs:[161,90],ws:[380,450],s:9},
+    {v:"dsm",x:155,top:495.4,w:380,s:9},
+    {v:"defic",x:153,top:519.1,w:380,s:9},
+    {v:"just",x:85,top:578,w:440,tops:[578,596,614,632],ws:[440,440,440,440],s:9}
+  ]},
+  ospecor: { archivo:"plantilla_ospecor.pdf", dy:2, campos:[
+    {v:"paciente",x:252,top:111.2,w:290,s:9},
+    {v:"dni",x:88,top:125.5,w:300,s:9},
+    {v:"padre",x:165,top:154.4,w:300,s:9},
+    {v:"padreAct",x:159,top:168.8,w:306,s:9},
+    {v:"padreTurno",x:147,top:183.2,w:318,s:9},
+    {v:"madre",x:178,top:211.9,w:287,s:9},
+    {v:"madreAct",x:157,top:226.2,w:308,s:9},
+    {v:"madreTurno",x:148,top:240.6,w:317,s:9},
+    {v:"h1",x:76,top:283.8,w:135,s:8},{v:"hA1",x:230,top:283.8,w:300,s:8},
+    {v:"h2",x:76,top:298.2,w:135,s:8},{v:"hA2",x:230,top:298.2,w:300,s:8},
+    {v:"h3",x:76,top:312.5,w:135,s:8},{v:"hA3",x:230,top:312.5,w:300,s:8},
+    {v:"h4",x:76,top:326.9,w:135,s:8},{v:"hA4",x:230,top:326.9,w:300,s:8},
+    {v:"dx",x:131,top:384.5,w:230,tops:[384.5,402],xs:[131,64],ws:[230,290],s:8},{v:"dsm",x:451,top:384.5,w:90,s:8},
+    {v:"defic",x:125,top:438.6,w:400,s:9},
+    {v:"just",x:64,top:500,w:480,tops:[500,518,536,554],ws:[480,480,480,480],s:9},
+    {v:"fecha",x:160,top:702.2,w:200,s:9}
+  ]},
+  ospical: { archivo:"plantilla_ospical.pdf", H:792, dy:-2, campos:[
+    {v:"paciente",x:175,top:135.4,w:320,s:9,dy:2},
+    {v:"af",x:153,top:154.1,w:120,s:9,dy:2},{v:"dni",x:305,top:154.1,w:190,s:9,dy:2},
+    {v:"vinT",x:151,top:171.4,w:8,s:8,dy:2},{v:"vinF",x:195,top:171.4,w:8,s:8,dy:2},
+    {v:"fnD",x:266,top:171.4,w:11,s:8,dy:2},{v:"fnM",x:283,top:171.4,w:13,s:8,dy:2},{v:"fnY",x:304,top:171.4,w:30,s:8,dy:2},
+    {v:"sexM",x:377,top:171.4,w:9,s:8,dy:2},{v:"sexF",x:414,top:171.4,w:9,s:8,dy:2},{v:"edad",x:465,top:171.4,w:30,s:9,dy:2},
+    {v:"casa",x:150,top:189.4,w:345,s:9,dy:2},
+    {v:"entre1",x:168,top:202.3,w:135,s:8,dy:2},{v:"entre2",x:314,top:202.3,w:178,s:8,dy:2},
+    {v:"casaLoc",x:149,top:221,w:118,s:8,dy:2},{v:"cp",x:286,top:221,w:52,s:8,dy:2},{v:"tel",x:357,top:221,w:136,s:8,dy:2},
+    {v:"padreDias",x:116,top:274.3,w:172,s:8,dy:5},{v:"padreTurno",x:300,top:274.3,w:190,s:8,dy:5},
+    {v:"madreDias",x:116,top:315.4,w:172,s:8,dy:5},{v:"madreTurno",x:300,top:315.4,w:190,s:8,dy:5},
+    {v:"hA1",x:116,top:357.8,w:136,s:7,dy:4},{v:"hE1",x:259,top:357.8,w:42,s:7,dy:4},{v:"hT1",x:403,top:357.8,w:90,s:7,dy:4},
+    {v:"hA2",x:116,top:373.7,w:136,s:7,dy:4},{v:"hE2",x:259,top:373.7,w:42,s:7,dy:4},{v:"hT2",x:403,top:373.7,w:90,s:7,dy:4},
+    {v:"hA3",x:116,top:388.1,w:136,s:7,dy:4},{v:"hE3",x:259,top:388.1,w:42,s:7,dy:4},{v:"hT3",x:403,top:388.1,w:90,s:7,dy:4},
+    {v:"hA4",x:116,top:403.2,w:136,s:7,dy:4},{v:"hE4",x:259,top:403.2,w:42,s:7,dy:4},{v:"hT4",x:403,top:403.2,w:90,s:7,dy:4},
+    {v:"dx",x:148,top:464.4,w:345,s:8},
+    {v:"cie",x:146,top:479.5,w:347,s:8},
+    {v:"dsm",x:150,top:494.6,w:343,s:8},
+    {v:"just",x:117,top:570.2,w:378,tops:[570.2,586.8,603.4,620.6],ws:[378,378,378,378],s:8},
+    {v:"periodo",x:254,top:635.8,w:238,s:8},
+    {v:"fecha",x:140,top:661,w:76,s:8}
+  ]},
+  ospav: { archivo:"plantilla_ospav.pdf", dy:2, campos:[
+    {v:"paciente",x:165,top:215.4,w:335,s:9},
+    {tipo:"comb",v:"dni",x:101.1,paso:17.15,n:10,top:240,s:9,dy:5},
+    {v:"madre",x:114,top:291,w:238,s:8},{v:"madreAct",x:358,top:294,w:80,s:6,dy:5},{v:"madreTurno",x:442,top:294,w:64,s:6,dy:5},
+    {v:"padre",x:114,top:310.4,w:238,s:8},{v:"padreAct",x:358,top:314,w:80,s:6,dy:5},{v:"padreTurno",x:442,top:314,w:64,s:6,dy:5},
+    {v:"h1",x:114,top:361,w:216,s:8},{v:"hE1",x:342,top:363.7,w:34,s:7,dy:5},{v:"hA1",x:378,top:363.7,w:60,s:7,dy:5},{v:"hT1",x:443,top:363.7,w:63,s:7,dy:5},
+    {v:"h2",x:114,top:378,w:216,s:8},{v:"hE2",x:342,top:380.7,w:34,s:7,dy:5},{v:"hA2",x:378,top:380.7,w:60,s:7,dy:5},{v:"hT2",x:443,top:380.7,w:63,s:7,dy:5},
+    {v:"h3",x:114,top:394.4,w:216,s:8},{v:"hE3",x:342,top:397,w:34,s:7,dy:5},{v:"hA3",x:378,top:397,w:60,s:7,dy:5},{v:"hT3",x:443,top:397,w:63,s:7,dy:5},
+    {v:"h4",x:114,top:411.4,w:216,s:8},{v:"hE4",x:342,top:414,w:34,s:7,dy:5},{v:"hA4",x:378,top:414,w:60,s:7,dy:5},{v:"hT4",x:443,top:414,w:63,s:7,dy:5},
+    {v:"dx",x:70,top:446.7,w:428,tops:[446.7,460.4],ws:[428,428],s:9},
+    {v:"dsm",x:70,top:531.7,w:428,s:9},
+    {v:"defic",x:70,top:603,w:428,s:9},
+    {v:"just",x:70,top:658.7,w:428,tops:[658.7,672.4,687.4],ws:[428,428,428],s:9}
+  ]},
+  nobis: { archivo:"plantilla_nobis.pdf", dy:2, campos:[
+    {v:"fd",x:469,top:148.5,w:12,s:9},{v:"fmm",x:487,top:148.5,w:11,s:9},{v:"fy",x:502,top:148.5,w:24,s:9},
+    {v:"paciente",x:160,top:217,w:360,s:9},
+    {v:"dni",x:109,top:240,w:140,s:9},
+    {v:"edad",x:99,top:262,w:40,s:9},{v:"sexo",x:168,top:262,w:80,s:9},
+    {v:"just",x:60,top:358.6,w:500,tops:[358.6,372.7,385.7,397.6],ws:[500,500,500,500],s:9},
+    {v:"casaZona",x:178,top:470,w:132,s:9},{v:"destNombre",x:395,top:470,w:150,s:8},
+    {v:"desde",x:125,top:505.3,w:68,s:9},{v:"hasta",x:246,top:505.3,w:68,s:9},
+    {v:"depSi",x:150,top:548.1,w:25},
+    {v:"justDep",x:58,top:629.8,w:510,tops:[629.8,648.8,668.4,687.8],ws:[510,510,510,510],s:9}
+  ]},
+  ospim: { archivo:"plantilla_ospim.pdf", dy:2, campos:[
+    {v:"os",x:136,top:131.4,w:380,s:10},
+    {v:"fecha",x:109,top:157.6,w:180,s:10},
+    {v:"paciente",x:230,top:183.9,w:290,s:10},
+    {v:"dni",x:160,top:210.1,w:200,s:10},
+    {v:"edad",x:104,top:236.4,w:120,s:10},
+    {v:"sexo",x:104,top:262.6,w:180,s:10},
+    {v:"dx",x:136,top:288.9,w:385,s:9},
+    {v:"just",x:433,top:330.1,w:118,tops:[330.1,344],xs:[433,72],ws:[118,451],s:8},
+    {v:"casa",x:177,top:390.1,w:268,s:9},
+    {v:"dest",x:74,top:420.1,w:220,s:9},
+    {v:"depTxt",x:245,top:705.1,w:62,s:10}
+  ]},
+  medife: { archivo:"plantilla_medife.pdf", H:786.33, dy:2, campos:[
+    {v:"fd",x:442,top:168,w:16,s:9},{v:"fmm",x:471,top:168,w:16,s:9},{v:"fy",x:497,top:168,w:26,s:9},
+    {v:"paciente",x:171,top:214,w:350,s:9},
+    {v:"dni",x:112,top:236,w:100,s:9},{v:"edad",x:247,top:236,w:56,s:9},
+    {v:"fnD",x:404,top:236,w:16,s:8},{v:"fnM",x:433,top:236,w:16,s:8},{v:"fnY",x:461,top:236,w:28,s:8},
+    {v:"vinT",x:117,top:258,w:8,s:8,dy:-2},{v:"vinC",x:193,top:258,w:8,s:8,dy:-2},{v:"vinCo",x:286,top:258,w:8,s:8,dy:-2},
+    {v:"vinH",x:350,top:258,w:8,s:8,dy:-2},{v:"vinO",x:409,top:258,w:8,s:8,dy:-2},
+    {v:"sexF",x:220,top:280,w:8,s:8,dy:-2},{v:"sexM",x:247,top:280,w:8,s:8,dy:-2},{v:"sexX",x:321,top:280,w:8,s:8,dy:-2},
+    {v:"depSi",x:297,top:327,w:8,s:8,dy:-2},{v:"depNo",x:330,top:327,w:8,s:8,dy:-2},
+    {v:"just",x:76,top:367,w:460,tops:[367,385.8,404.4],ws:[460,460,460],s:9},
+    {v:"casa",x:197,top:449.6,w:340,s:9},
+    {v:"dest",x:197,top:468.4,w:340,s:9},
+    {v:"desde",x:200,top:562.5,w:98,s:9},{v:"hasta",x:336,top:562.5,w:98,s:9},{v:"fy",x:471,top:562.5,w:66,s:9},
+    {v:"dx",x:76,top:601.8,w:460,tops:[601.8,619.3],ws:[460,460],s:9}
+  ]},
+  caja: { archivo:"plantilla_caja.pdf", H:842.52, dy:2, campos:[
+    {v:"fd",x:318,top:243,w:85},{v:"fm",x:424,top:243,w:79},{v:"fy2",x:526,top:243,w:16},
+    {v:"paciente",x:162,top:335,w:610},
+    {v:"dni",x:92,top:357,w:100},{v:"edad",x:230,top:357,w:50},{v:"sexo",x:324,top:357,w:70},
+    {v:"dxE",x:182,top:377,w:592,s:9},
+    {v:"dxF",x:182,top:398,w:592,s:9},
+    {v:"depSi",x:160,top:484,w:36},{v:"depNo",x:212,top:484,w:36},
+    {v:"casaCalle",x:88,top:542,w:192,s:9},{v:"casaNum",x:333,top:542,w:58},{v:"casaLoc",x:456,top:542,w:100},
+    {v:"destNombre",x:358,top:564,w:415},
+    {v:"destCalle",x:88,top:618,w:192,s:9},{v:"destNum",x:333,top:618,w:58},{v:"destLoc",x:456,top:618,w:100},
+    {v:"desde",x:178,top:652,w:205},{v:"hasta",x:401,top:652,w:62}
   ]},
   prevencion: { archivo:"plantilla_prevencion.pdf", campos:[
     {v:"os",x:125,top:153.7,w:170,dy:8.5},
@@ -348,6 +536,22 @@ const PLANTILLAS = {
   ]}
 };
 
+function hermanosPartes(){
+  const ls = ($("hermanos").value||"").split(/\n/).map(x=>x.trim()).filter(Boolean);
+  const o = {};
+  for (let i=0;i<4;i++){
+    const partes = (ls[i]||"").split(/\s*[-–—;]\s*/).map(x=>x.trim()).filter(Boolean);
+    o["h"+(i+1)] = partes[0] || "";
+    o["hE"+(i+1)] = partes[1] || "";
+    o["hA"+(i+1)] = partes[2] || "";
+    o["hT"+(i+1)] = partes.slice(3).join(" - ");
+  }
+  for (let i=1;i<=4;i++) o["hAT"+i] = [o["hA"+i],o["hT"+i]].filter(Boolean).join(" - ");
+  o.hermAct = [o.hA1,o.hA2,o.hA3,o.hA4].filter(Boolean).join(" / ");
+  o.hermTurnos = [o.hT1,o.hT2,o.hT3,o.hT4].filter(Boolean).join(" / ");
+  o.hermNom = [1,2,3,4].map(i=>[o["h"+i],o["hE"+i]].filter(Boolean).join(", ")).filter(Boolean).join(" / ");
+  return o;
+}
 function valores(dst){
   const f = fechaPartes();
   const con = document.querySelector('input[name=dep]:checked').value === "con";
@@ -365,11 +569,37 @@ function valores(dst){
       + ` ${con ? "Con dependencia." : "Sin dependencia."}`,
     prestacionCorta:`Transporte especial ida y vuelta, de lunes a viernes.`,
     just:$("just").value,
-    desde:$("desde").value.replace(/\s*(de\s*)?20\d\d\s*$/i,""),
-    hasta:$("hasta").value.replace(/\s*(de\s*)?20\d\d\s*$/i,""),
+    desde:sinAnio(periodo(dst).desde),
+    hasta:sinAnio(periodo(dst).hasta),
     fd:f.d, fm:f.m, fmm:f.mm, fy:f.y, fecha:`${f.d}/${f.mm}/${f.y}`,
     depSi: con ? "X" : "", depNo: con ? "" : "X",
-    tipoDoc:"DNI", sexoL:($("sexo").value||"").slice(0,1).toUpperCase()
+    tipoDoc:"DNI", sexoL:($("sexo").value||"").slice(0,1).toUpperCase(),
+    fy2:f.y.slice(2),
+    casaCalle:$("casaCalle").value, casaNum:$("casaNum").value, casaLoc:$("casaLoc").value,
+    destCalle:dst.calle||"", destNum:dst.num||"", destLoc:dst.loc||"",
+    fnD:FNAC.d, fnM:FNAC.m, fnY:FNAC.y,
+    sexF:($("sexo").value||"").toUpperCase().startsWith("F") ? "X" : "",
+    sexM:($("sexo").value||"").toUpperCase().startsWith("M") ? "X" : "",
+    sexX:($("sexo").value||"").toUpperCase().startsWith("X") ? "X" : "",
+    casaZona:[$("casaBarrio").value,$("casaLoc").value].filter(Boolean).join(", "),
+    depTxt: con ? "SI" : "NO",
+    dsm:$("dsm").value, defic:$("defic").value,
+    entre:$("entre").value, cp:$("cp").value, tel:get("tel"),
+    cie:$("dsm").value,
+    padreDias:[$("padre").value,$("padreAct").value].filter(Boolean).join(" — "),
+    madreDias:[$("madre").value,$("madreAct").value].filter(Boolean).join(" — "),
+    periodo:[periodo(dst).desde,periodo(dst).hasta].filter(Boolean).join(" a "),
+    entre1:($("entre").value||"").split(/\s+y\s+/i)[0]||"",
+    entre2:($("entre").value||"").split(/\s+y\s+/i)[1]||"",
+    padre:$("padre").value, padreAct:$("padreAct").value, padreTurno:$("padreTurno").value,
+    madre:$("madre").value, madreAct:$("madreAct").value, madreTurno:$("madreTurno").value,
+    padreL:[$("padre").value,$("padreAct").value].filter(Boolean).join(" — "),
+    madreL:[$("madre").value,$("madreAct").value].filter(Boolean).join(" — "),
+    padreMadre:[$("padre").value && `${$("padre").value} — ${$("padreAct").value}`,
+                $("madre").value && `${$("madre").value} — ${$("madreAct").value}`].filter(Boolean).join(" / "),
+    turnos:[$("padreTurno").value, $("madreTurno").value].filter(Boolean).join(" / "),
+    hermanos:$("hermanos").value.split(/\n/).map(x=>x.trim()).filter(Boolean).join(" / "),
+    ...hermanosPartes()
   };
 }
 
@@ -380,6 +610,13 @@ async function paginaTabla(out, base, font, dst, fontB, tpl){
   const alto = def.H || 841.89;
   const V = valores(dst);
   for (const c of def.campos){
+    if (c.tipo === "comb"){
+      const dyc = c.dy !== undefined ? c.dy : (def.dy !== undefined ? def.dy : -2);
+      const t = (V[c.v] || "").slice(0, c.n);
+      for (let i = 0; i < t.length; i++)
+        campo(form,page,font,t[i], c.x + i*c.paso + (c.paso-6)/2, alto-c.top+dyc, c.paso-3, 13, c.s || 10);
+      continue;
+    }
     if (c.tipo === "circ"){
       if (V[c.v]) page.drawEllipse({ x: c.cx, y: alto - c.top, xScale: c.rx || 11, yScale: c.ry || 7,
                                      borderColor: rgb(0.05,0.1,0.35), borderWidth: 1.2 });
@@ -451,9 +688,10 @@ async function paginaNota(out, base, font, dst, fontB){
 
   rotulo("Período:", IZQ, y);
   texto("de", IZQ+55, y);
-  campo(form,page,font,$("desde").value.replace(/\s*(de\s*)?20\d\d\s*$/i,""), IZQ+75, y-3, 130);
+  const pn = periodo(dst);
+  campo(form,page,font,sinAnio(pn.desde), IZQ+75, y-3, 130);
   texto("a", IZQ+212, y);
-  campo(form,page,font,$("hasta").value.replace(/\s*(de\s*)?20\d\d\s*$/i,""), IZQ+228, y-3, 130);
+  campo(form,page,font,sinAnio(pn.hasta), IZQ+228, y-3, 130);
   texto("de", IZQ+365, y);
   campo(form,page,font,f.y, IZQ+385, y-3, 50); y -= 32;
 
@@ -472,6 +710,7 @@ $("gen").addEventListener("click", async () => {
   try {
     if (!$("ap").value.trim()) throw new Error("Falta el apellido del paciente.");
     const tpl = $("tpl").value;
+    if (!tpl) throw new Error("Elegí la plantilla antes de descargar. Si la obra social no tiene plantilla cargada, usá \u0022Nota en hoja membretada\u0022 o pedile la plantilla 2027 a la obra social.");
     const out = await PDFDocument.create();
     const font = await out.embedFont(StandardFonts.Helvetica);
     const fontB = await out.embedFont(StandardFonts.HelveticaBold);
