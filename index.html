@@ -167,6 +167,8 @@ const PLANTILLA_POR_OS = {
   "OSME (UNIMED)":"nota","OSPIC":"nota","IOSFA":"nota",
   "OSDE":"nota","OSPRERA":"nota","OSPATRONES":"nota","OSTPCPHYARA (PASTELEROS)":"nota",
   "OSECAC":"nota",
+  // Sin formulario 2027 todavía: van con la nota genérica (13/11)
+  "MEDICUS":"nota","NOBIS":"nota","OSPIM":"nota",
   // Formularios propios con campos posicionados
   "OSPE":"ospe","OSGUIN (SERVIRED)":"osguin","OSGUIN":"osguin","OSPAV":"ospav","OSPICAL":"ospical","MEDIFE":"medife","PREVENCION SALUD":"prevencion","OSSOELSAC":"ossoelsac","OSSSB":"osssb","OSBLYCA (SERVIRED)":"osblyca","OSBLYCA":"osblyca","OMINT":"omint",
   "OSPECOR":"ospecor","OSCEP (SIPSSA)":"sipssa","SIPSSA":"sipssa","OSCEP":"sipssa",
@@ -200,7 +202,7 @@ if (get("dest")) $("dest").value = get("dest");
 $("neuCalle").value = NEUROS.calle; $("neuNum").value = NEUROS.numero; $("neuLoc").value = NEUROS.localidad;
 $("fecha").valueAsDate = new Date(Date.now() - new Date().getTimezoneOffset()*60000);
 
-const FALTA_2027 = ["MEDICUS","NOBIS","OSPIM"];
+const FALTA_2027 = [];   // vacío desde el 13/11: lo que no tiene formulario propio va con la nota genérica
 const sinTilde = t => (t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase();
 const MAPA_OS = Object.fromEntries(Object.entries(PLANTILLA_POR_OS).map(([k,v]) => [sinTilde(k), v]));
 function elegirPlantilla(){
@@ -211,7 +213,8 @@ function elegirPlantilla(){
     $("tpl").value = "";
     $("tplMsg").innerHTML = `<span class="pill warn">Falta la plantilla <b>2027</b> de ${os}. Pedila a la obra social y avisale a Paola: la de 2026 ya no sirve.</span>`;
   }
-  else { $("tpl").value = ""; $("tplMsg").innerHTML = `<span class="pill warn">${os || "Esta obra social"} todavía no tiene plantilla asignada: elegí una a mano.</span>`; }
+  else if (os){ $("tpl").value = "nota"; $("tplMsg").innerHTML = `<span class="pill warn">${os} no tiene formulario propio cargado: va con la nota genérica. Si la obra social tiene su formulario, elegilo a mano.</span>`; }
+  else { $("tpl").value = ""; $("tplMsg").innerHTML = `<span class="pill warn">Falta la obra social: elegí la plantilla a mano.</span>`; }
 }
 const CON_LABORALES = ["ospe","osguin","ospical","ospav","osplad"];
 function verCardLab(){ $("cardLab").style.display = CON_LABORALES.includes($("tpl").value) ? "" : "none"; }
