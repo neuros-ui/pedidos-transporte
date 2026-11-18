@@ -248,6 +248,12 @@ function campo(form, page, font, text, x, yTop, w, h = 13, size = 10){
   f.setFontSize(size);
   return f;
 }
+// Achica la letra lo justo para que el texto entre en una sola línea (mínimo 6)
+function tamanoQueEntra(font, texto, w, size = 9, min = 6){
+  const t = (texto || "").trim(); if (!t) return size;
+  const ancho1 = font.widthOfTextAtSize(t, 1);
+  return Math.max(min, Math.min(size, Math.floor(((w - 6) / ancho1) * 10) / 10));
+}
 function partir(font, size, texto, anchos){
   const palabras = (texto || "").replace(/\s+/g," ").trim().split(" ").filter(Boolean);
   const lineas = []; let i = 0;
@@ -310,7 +316,8 @@ async function paginaGEA(out, base, font, dst){
   campo(form,page,font,`${$("ap").value.toUpperCase()}, ${$("no").value}`,155,Y(239.9),406);
   campo(form,page,font,$("dni").value,88,Y(261.3),92); campo(form,page,font,$("edad").value,212,Y(261.3),44);
   campo(form,page,font,$("sexo").value,289,Y(261.3),71);
-  campo(form,page,font,$("dxEtio").value,173,Y(281.7),388,13,9); campo(form,page,font,$("dxFunc").value,174,Y(301.3),387,13,9);
+  campo(form,page,font,$("dxEtio").value,173,Y(281.7),388,13,tamanoQueEntra(font,$("dxEtio").value,388));
+  campo(form,page,font,$("dxFunc").value,174,Y(301.3),387,13,tamanoQueEntra(font,$("dxFunc").value,387));
   const rj=[410.6,437.0,463.5,489.9,516.3,542.7];
   partir(font,10,$("just").value,rj.map(()=>506)).forEach((l,i)=>campo(form,page,font,l,55,Y(rj[i]),506));
   const con = document.querySelector('input[name=dep]:checked').value === "con";
