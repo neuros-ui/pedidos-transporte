@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Horarios de Terapias 2027 · NEUROS</title>
+<script src="pdf-lib.min.js"></script>
+<style>
+  :root{
+    --verde-oscuro:#0FA77F;
+    --verde-claro:#87D3BF;
+    --gris:#747480;
+    --gris-claro:#F4F5F6;
+    --borde:#D8DBDE;
+    --celeste:#2BA8C4;
+    --rosa:#C23B6B;
+    --naranja:#F0954B;
+    --violeta:#7B6FD1;
+    --bg:#F7F8FA;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Segoe UI', Arial, sans-serif;
+    background:var(--bg);
+    margin:0;
+    padding:24px;
+    color:#2E2E38;
+  }
+  .wrap{max-width:900px;margin:0 auto;}
+  header.app{
+    display:flex;align-items:center;gap:16px;margin-bottom:20px;
+  }
+  header.app img{height:46px;}
+  header.app h1{font-size:20px;margin:0;color:var(--gris);font-weight:700;}
+  header.app small{display:block;color:var(--verde-oscuro);font-weight:600;letter-spacing:.03em;font-size:12px;}
+  .card{
+    background:#fff;border:1px solid var(--borde);border-radius:14px;
+    padding:20px 22px;margin-bottom:18px;box-shadow:0 1px 3px rgba(20,20,30,.05);
+  }
+  .card h2{
+    font-size:15px;margin:0 0 14px;color:var(--verde-oscuro);
+    text-transform:uppercase;letter-spacing:.04em;
+  }
+  label{font-size:12.5px;color:var(--gris);display:block;margin-bottom:4px;font-weight:600;}
+  input[type=text], input[type=search], select{
+    width:100%;padding:8px 10px;border:1px solid var(--borde);border-radius:8px;
+    font-size:14px;background:#fff;
+  }
+  .grid2{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:14px;}
+  .buscador{position:relative;margin-bottom:14px;}
+  #listaPacientes{
+    position:absolute;z-index:5;background:#fff;border:1px solid var(--borde);
+    border-radius:8px;max-height:220px;overflow:auto;width:100%;
+    box-shadow:0 6px 18px rgba(20,20,30,.12);display:none;
+  }
+  #listaPacientes div{padding:8px 10px;font-size:13.5px;cursor:pointer;border-bottom:1px solid #EFEFF2;}
+  #listaPacientes div:hover{background:var(--gris-claro);}
+  #listaPacientes div b{color:var(--verde-oscuro);}
+  table.horarios{width:100%;border-collapse:collapse;margin-top:6px;}
+  table.horarios th, table.horarios td{border:1px solid var(--borde);padding:6px;text-align:center;font-size:12.5px;}
+  table.horarios th{background:var(--verde-claro);color:#0b4f3e;font-weight:700;}
+  table.horarios td.prestacion{text-align:left;font-weight:600;background:var(--gris-claro);white-space:nowrap;padding-left:10px;}
+  table.horarios input{border:1px solid var(--borde);border-radius:6px;padding:4px;width:100%;font-size:12.5px;text-align:center;}
+  .fila-extra td.prestacion{color:var(--rosa);}
+  .botones{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+  button.generar{
+    flex:1;min-width:240px;border:none;border-radius:10px;padding:13px 16px;
+    font-size:14px;font-weight:700;cursor:pointer;color:#fff;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  button.fam{background:var(--violeta);}
+  button.fam:hover{background:#6a5fc0;}
+  button.transp{background:var(--naranja);}
+  button.transp:hover{background:#dd8740;}
+  button.generar:disabled{background:#B7B7BE;cursor:not-allowed;}
+  .nota{font-size:12px;color:var(--gris);margin-top:10px;line-height:1.5;}
+  .estado{font-size:12.5px;margin-top:10px;min-height:18px;}
+  .ok{color:var(--verde-oscuro);font-weight:600;}
+  .err{color:var(--rosa);font-weight:600;}
+  .demo{background:#FFF4E6;border:1px solid var(--naranja);border-radius:10px;padding:10px 14px;font-size:12.5px;color:#8a5a1f;margin-bottom:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app">
+    <img src="logo_neuros.png" alt="NEUROS">
+    <div>
+      <h1>Generador de Horarios de Terapias</h1>
+      <small>CENTRO DE NEURORREHABILITACIÓN · AÑO 2027</small>
+    </div>
+  </header>
+
+  <div class="demo" id="avisoDemo">
+    Todavía no está cargado el listado completo de pacientes. Podés completar los datos a mano abajo, o buscar por
+    nombre/DNI una vez que se suba <code>pacientes.js</code> con el listado de PLANES 2027.
+  </div>
+
+  <div class="card">
+    <h2>1. Elegí o cargá el paciente</h2>
+    <div class="buscador">
+      <label for="buscar">Buscar por nombre o DNI</label>
+      <input type="search" id="buscar" placeholder="Empezá a escribir…" autocomplete="off">
+      <div id="listaPacientes"></div>
+    </div>
+    <div class="grid2">
+      <div>
+        <label for="nombre">Nombre y Apellido</label>
+        <input type="text" id="nombre" placeholder="Ej: PEREZ JUAN">
+      </div>
+      <div>
+        <label for="dni">DNI</label>
+        <input type="text" id="dni" placeholder="Ej: 45123456">
+      </div>
+      <div>
+        <label for="anio">Año</label>
+        <input type="text" id="anio" value="2027">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. Días y horarios por prestación</h2>
+    <table class="horarios" id="tablaHorarios">
+      <thead>
+        <tr>
+          <th style="text-align:left;">Prestación</th>
+          <th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- filas de prestaciones generadas por JS -->
+      </tbody>
+    </table>
+    <div class="nota">Estas filas van en los dos PDF. Dejá vacío un casillero si ese día no corresponde esa prestación.</div>
+  </div>
+
+  <div class="card">
+    <h2>3. Horario de entrada y salida (solo PDF familia)</h2>
+    <table class="horarios" id="tablaEntradaSalida">
+      <thead>
+        <tr>
+          <th style="text-align:left;">&nbsp;</th>
+          <th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="fila-extra">
+          <td class="prestacion">Horario de entrada</td>
+          <td><input data-fila="entrada" data-dia="0"></td>
+          <td><input data-fila="entrada" data-dia="1"></td>
+          <td><input data-fila="entrada" data-dia="2"></td>
+          <td><input data-fila="entrada" data-dia="3"></td>
+          <td><input data-fila="entrada" data-dia="4"></td>
+        </tr>
+        <tr class="fila-extra">
+          <td class="prestacion">Horario de salida</td>
+          <td><input data-fila="salida" data-dia="0"></td>
+          <td><input data-fila="salida" data-dia="1"></td>
+          <td><input data-fila="salida" data-dia="2"></td>
+          <td><input data-fila="salida" data-dia="3"></td>
+          <td><input data-fila="salida" data-dia="4"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>4. Generar los PDF</h2>
+    <div class="botones">
+      <button class="generar fam" id="btnFamilia">📄 PDF para la familia</button>
+      <button class="generar transp" id="btnTransporte">📄 PDF para transporte / obra social</button>
+    </div>
+    <div class="estado" id="estado"></div>
+    <div class="nota">
+      El PDF de <b>transporte / obra social</b> solo lleva la tabla de prestaciones y la nota para entregar.<br>
+      El PDF de <b>la familia</b> suma el horario de entrada y salida de cada día.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PRESTACIONES = ["Kinesiología","Terapia Ocupacional","Fonoaudiología","Psicología","Psicopedagogía","Psicomotricidad"];
+const DIAS = ["LUNES","MARTES","MIÉRCOLES","JUEVES","VIERNES"];
+
+// ---------- Listado de pacientes (PLANES 2027) ----------
+// Se completa con pacientes.js (array PACIENTES) cuando esté disponible.
+// Formato esperado por paciente:
+// { nombre:"APELLIDO NOMBRE", dni:"12345678",
+//   horarios:{ "Kinesiología":["10:00","","","10:00",""], ... },
+//   entrada:["08:00","","08:00","","08:00"], salida:["09:00","","09:00","","09:00"] }
+window.PACIENTES = window.PACIENTES || [
+  { nombre:"EJEMPLO DEMO PACIENTE", dni:"00000000",
+    horarios:{ "Kinesiología":["10:00","","10:00","",""],
+               "Terapia Ocupacional":["","11:00","","11:00",""],
+               "Fonoaudiología":["","","09:30","",""],
+               "Psicología":["14:00","","","","14:00"],
+               "Psicopedagogía":["","","","15:00",""],
+               "Psicomotricidad":["","08:30","","","08:30"] },
+    entrada:["08:00","08:00","08:00","08:00","08:00"],
+    salida:["15:00","12:00","11:00","16:00","15:00"] }
+];
+
+// ---------- precarga desde la URL (botón "Horarios" de la lista de Transporte) ----------
+// Acepta ?nombre=APELLIDO%20NOMBRE&dni=12345678
+// o bien ?apellido=...&nombres=...&dni=...
+function precargarDesdeURL(){
+  const qs = new URLSearchParams(window.location.search);
+  let nombre = qs.get('nombre');
+  const apellido = qs.get('apellido');
+  const nombres = qs.get('nombres');
+  const dni = qs.get('dni');
+  if(!nombre && (apellido || nombres)) nombre = [apellido, nombres].filter(Boolean).join(' ');
+  if(nombre) document.getElementById('nombre').value = nombre.trim();
+  if(dni) document.getElementById('dni').value = dni.trim();
+  if(nombre || dni){
+    const p = (window.PACIENTES||[]).find(p => p.dni === (dni||'').trim());
+    if(p) cargarPaciente(p);
+  }
+}
+
+// ---------- construir filas de la tabla principal ----------
+const tbody = document.querySelector('#tablaHorarios tbody');
+PRESTACIONES.forEach(p=>{
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td class="prestacion">${p}</td>` +
+    [0,1,2,3,4].map(d=>`<td><input data-prestacion="${p}" data-dia="${d}"></td>`).join('');
+  tbody.appendChild(tr);
+});
+
+// ---------- buscador ----------
+const inputBuscar = document.getElementById('buscar');
+const lista = document.getElementById('listaPacientes');
+const avisoDemo = document.getElementById('avisoDemo');
+if (window.PACIENTES.length > 1) avisoDemo.style.display = 'none';
+
+inputBuscar.addEventListener('input', ()=>{
+  const q = inputBuscar.value.trim().toLowerCase();
+  lista.innerHTML = '';
+  if(!q){ lista.style.display='none'; return; }
+  const res = window.PACIENTES.filter(p =>
+    p.nombre.toLowerCase().includes(q) || p.dni.includes(q)
+  ).slice(0,30);
+  if(res.length===0){ lista.style.display='none'; return; }
+  res.forEach(p=>{
+    const div = document.createElement('div');
+    div.innerHTML = `<b>${p.nombre}</b> — DNI ${p.dni}`;
+    div.onclick = ()=> cargarPaciente(p);
+    lista.appendChild(div);
+  });
+  lista.style.display='block';
+});
+document.addEventListener('click', (e)=>{
+  if(!lista.contains(e.target) && e.target!==inputBuscar) lista.style.display='none';
+});
+
+function cargarPaciente(p){
+  document.getElementById('nombre').value = p.nombre;
+  document.getElementById('dni').value = p.dni;
+  inputBuscar.value = p.nombre;
+  lista.style.display='none';
+  PRESTACIONES.forEach(pr=>{
+    [0,1,2,3,4].forEach(d=>{
+      const el = document.querySelector(`input[data-prestacion="${pr}"][data-dia="${d}"]`);
+      const val = (p.horarios && p.horarios[pr] && p.horarios[pr][d]) || '';
+      if(el) el.value = val;
+    });
+  });
+  [0,1,2,3,4].forEach(d=>{
+    const e1 = document.querySelector(`input[data-fila="entrada"][data-dia="${d}"]`);
+    const s1 = document.querySelector(`input[data-fila="salida"][data-dia="${d}"]`);
+    if(e1) e1.value = (p.entrada && p.entrada[d]) || '';
+    if(s1) s1.value = (p.salida && p.salida[d]) || '';
+  });
+}
+
+// ---------- lectura del formulario ----------
+function leerFormulario(){
+  const nombre = document.getElementById('nombre').value.trim() || 'SIN NOMBRE';
+  const dni = document.getElementById('dni').value.trim();
+  const anio = document.getElementById('anio').value.trim() || '2027';
+  const horarios = {};
+  PRESTACIONES.forEach(pr=>{
+    horarios[pr] = [0,1,2,3,4].map(d=>{
+      const el = document.querySelector(`input[data-prestacion="${pr}"][data-dia="${d}"]`);
+      return el ? el.value.trim() : '';
+    });
+  });
+  const entrada = [0,1,2,3,4].map(d=> (document.querySelector(`input[data-fila="entrada"][data-dia="${d}"]`)||{}).value || '');
+  const salida  = [0,1,2,3,4].map(d=> (document.querySelector(`input[data-fila="salida"][data-dia="${d}"]`)||{}).value || '');
+  return {nombre, dni, anio, horarios, entrada, salida};
+}
+
+// ---------- generación de PDF ----------
+const { PDFDocument, rgb, StandardFonts } = PDFLib;
+
+async function cargarLogoBytes(){
+  const r = await fetch('logo_neuros.png');
+  return await r.arrayBuffer();
+}
+
+function hex(h){
+  h = h.replace('#','');
+  return rgb(parseInt(h.substr(0,2),16)/255, parseInt(h.substr(2,2),16)/255, parseInt(h.substr(4,2),16)/255);
+}
+const COL_VERDE_OSC = hex('0FA77F');
+const COL_VERDE_CLA = hex('87D3BF');
+const COL_GRIS = hex('747480');
+const COL_GRIS_CLARO = hex('F4F5F6');
+const COL_BORDE = hex('C9CCD1');
+const COL_VIOLETA = hex('7B6FD1');
+const COL_NARANJA = hex('F0954B');
+const COL_BLANCO = rgb(1,1,1);
+const COL_NEGRO = rgb(0.15,0.15,0.18);
+
+async function construirPDF({incluirEntradaSalida, colorCinta, textoCinta, textoNota}){
+  const datos = leerFormulario();
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4
+  const W = 595.28, H = 841.89;
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+  const logoBytes = await cargarLogoBytes();
+  const logoImg = await pdfDoc.embedPng(logoBytes);
+  const logoW = 150, logoH = logoW * (logoImg.height/logoImg.width);
+  page.drawImage(logoImg, {x:40, y:H-40-logoH, width:logoW, height:logoH});
+
+  // cinta de color arriba a la derecha
+  const cintaW = 170, cintaH = 30;
+  page.drawRectangle({x:W-40-cintaW, y:H-40-cintaH, width:cintaW, height:cintaH, color:colorCinta});
+  page.drawText(textoCinta, {
+    x: W-40-cintaW + (cintaW - fontBold.widthOfTextAtSize(textoCinta,11))/2,
+    y: H-40-cintaH + (cintaH-11)/2 + 1,
+    size:11, font:fontBold, color: COL_BLANCO
+  });
+
+  // título
+  let y = H - 40 - logoH - 36;
+  page.drawText(`HORARIOS DE TERAPIAS ${datos.anio}`, {x:40, y, size:18, font:fontBold, color:COL_VERDE_OSC});
+  y -= 28;
+
+  // datos paciente
+  page.drawText('Nombre y Apellido:', {x:40, y, size:11, font:fontBold, color:COL_GRIS});
+  page.drawText(datos.nombre, {x:170, y, size:11, font, color:COL_NEGRO});
+  y -= 18;
+  page.drawText('DNI:', {x:40, y, size:11, font:fontBold, color:COL_GRIS});
+  page.drawText(datos.dni, {x:170, y, size:11, font, color:COL_NEGRO});
+  y -= 30;
+
+  // ---- tabla ----
+  const colLabelW = 150;
+  const colDiaW = (W - 80 - colLabelW) / 5;
+  const filaH = 24;
+  const filas = PRESTACIONES.slice();
+  const filasExtra = incluirEntradaSalida ? ['Horario de entrada','Horario de salida'] : [];
+  const totalFilas = filas.length + filasExtra.length;
+  const tablaTop = y;
+  const tablaH = filaH * (totalFilas + 1);
+  const tablaX = 40;
+
+  // encabezado
+  page.drawRectangle({x:tablaX, y:tablaTop-filaH, width: colLabelW, height:filaH, color:COL_VERDE_CLA});
+  DIAS.forEach((d,i)=>{
+    page.drawRectangle({x:tablaX+colLabelW+colDiaW*i, y:tablaTop-filaH, width:colDiaW, height:filaH, color:COL_VERDE_CLA});
+    const tw = fontBold.widthOfTextAtSize(d,9);
+    page.drawText(d, {x: tablaX+colLabelW+colDiaW*i + (colDiaW-tw)/2, y: tablaTop-filaH+8, size:9, font:fontBold, color: rgb(0.03,0.31,0.25)});
+  });
+
+  // filas de prestaciones + extra
+  let rowY = tablaTop - filaH;
+  const todasFilas = filas.map(p=>({label:p, valores:datos.horarios[p]}))
+    .concat(incluirEntradaSalida ? [
+      {label:'Horario de entrada', valores: datos.entrada},
+      {label:'Horario de salida', valores: datos.salida}
+    ] : []);
+
+  todasFilas.forEach((fila, idx)=>{
+    rowY -= filaH;
+    const bg = idx % 2 === 0 ? COL_GRIS_CLARO : COL_BLANCO;
+    page.drawRectangle({x:tablaX, y:rowY, width:colLabelW, height:filaH, color:bg});
+    page.drawText(fila.label, {x: tablaX+8, y: rowY+8, size:9.5, font:fontBold, color: COL_GRIS});
+    DIAS.forEach((d,i)=>{
+      page.drawRectangle({x:tablaX+colLabelW+colDiaW*i, y:rowY, width:colDiaW, height:filaH, color:COL_BLANCO});
+      const val = fila.valores[i] || '';
+      if(val){
+        const tw = font.widthOfTextAtSize(val,9.5);
+        page.drawText(val, {x: tablaX+colLabelW+colDiaW*i + (colDiaW-tw)/2, y: rowY+8, size:9.5, font, color: COL_NEGRO});
+      }
+    });
+  });
+
+  // bordes de la tabla (grid)
+  const totalFilasConHeader = totalFilas+1;
+  for(let i=0;i<=totalFilasConHeader;i++){
+    const ly = tablaTop - filaH*i;
+    page.drawLine({start:{x:tablaX,y:ly}, end:{x:tablaX+colLabelW+colDiaW*5,y:ly}, thickness:0.75, color:COL_BORDE});
+  }
+  for(let i=0;i<=5;i++){
+    const lx = tablaX+colLabelW+colDiaW*i;
+    page.drawLine({start:{x:lx,y:tablaTop}, end:{x:lx,y:tablaTop-filaH*totalFilasConHeader}, thickness:0.75, color:COL_BORDE});
+  }
+  page.drawLine({start:{x:tablaX,y:tablaTop}, end:{x:tablaX,y:tablaTop-filaH*totalFilasConHeader}, thickness:0.75, color:COL_BORDE});
+
+  // nota
+  let notaY = tablaTop - filaH*totalFilasConHeader - 26;
+  if(textoNota){
+    page.drawText(textoNota, {x:40, y:notaY, size:10, font:fontBold, color: COL_NARANJA});
+  }
+
+  // footer
+  page.drawLine({start:{x:40,y:60}, end:{x:W-40,y:60}, thickness:1.2, color:COL_VERDE_CLA});
+  const footer = 'AV. Colón 4440, X5003DEO, CÓRDOBA  |  +54 0351 484-8900/01  |  centroneuros.com.ar  |  info@centroneuros.com.ar';
+  page.drawText(footer, {x:40, y:45, size:7.8, font, color:COL_GRIS});
+
+  return pdfDoc;
+}
+
+function nombreArchivo(sufijo){
+  const d = leerFormulario();
+  const limpio = (d.nombre||'PACIENTE').replace(/[^A-Za-z0-9ÁÉÍÓÚÑáéíóúñ ]/g,'').trim().replace(/\s+/g,'_').toUpperCase();
+  return `${limpio}_${d.dni||'SINDNI'}_${sufijo}_${d.anio}.pdf`;
+}
+
+async function descargarPDF(pdfDoc, nombreArch){
+  const bytes = await pdfDoc.save();
+  const blob = new Blob([bytes], {type:'application/pdf'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nombreArch;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+
+const estado = document.getElementById('estado');
+function setEstado(msg, ok){
+  estado.textContent = msg;
+  estado.className = 'estado ' + (ok ? 'ok' : 'err');
+}
+
+document.getElementById('btnFamilia').addEventListener('click', async ()=>{
+  try{
+    setEstado('Generando PDF para la familia…', true);
+    const pdfDoc = await construirPDF({
+      incluirEntradaSalida:true,
+      colorCinta: COL_VIOLETA,
+      textoCinta: 'PARA LA FAMILIA',
+      textoNota: ''
+    });
+    await descargarPDF(pdfDoc, nombreArchivo('FAMILIA'));
+    setEstado('Listo. Se descargó el PDF para la familia.', true);
+  }catch(e){
+    console.error(e);
+    setEstado('Hubo un error generando el PDF. Revisá la consola.', false);
+  }
+});
+
+precargarDesdeURL();
+
+document.getElementById('btnTransporte').addEventListener('click', async ()=>{
+  try{
+    setEstado('Generando PDF para transporte / obra social…', true);
+    const pdfDoc = await construirPDF({
+      incluirEntradaSalida:false,
+      colorCinta: COL_NARANJA,
+      textoCinta: 'TRANSPORTE / O.S.',
+      textoNota: '* Entregar en su obra social y/o servicio de transporte.'
+    });
+    await descargarPDF(pdfDoc, nombreArchivo('TRANSPORTE'));
+    setEstado('Listo. Se descargó el PDF para transporte / obra social.', true);
+  }catch(e){
+    console.error(e);
+    setEstado('Hubo un error generando el PDF. Revisá la consola.', false);
+  }
+});
+</script>
+</body>
+</html>
