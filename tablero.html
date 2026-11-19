@@ -30,7 +30,11 @@ footer{text-align:center;color:#8a84ad;font-size:12.5px;padding-bottom:24px}
   <button class="btn alt" id="copiarLink">🔗 Copiar solo el link</button>
   <div class="note" id="estado">Copialo y pegalo en el chat con la familia o el transportista.</div></div>
 </aside></main>
-tile-tablero.html<footer>Dudas o cambios: Coordinación Administrativa · Paola Delera</footer>
+<a href="https://neuros-ui.github.io/pedidos-transporte/horarios/" target="_blank"
+   style="display:inline-block;background:#7B6FD1;color:#fff;text-decoration:none;
+          padding:10px 18px;border-radius:8px;font-weight:700;">
+  📅 Horarios de Terapias 2027
+</a><footer>Dudas o cambios: Coordinación Administrativa · Paola Delera</footer>
 <script>
 const MSG="Hola \ud83d\udc4b Te escribimos de *NEUROS* para que puedas pedir el *transporte* del paciente.\n\nSe completa desde el celular, tarda unos 5 minutos y no hace falta cuenta ni contrase\u00f1a.\n\n\ud83d\udccb *Ten\u00e9 a mano:*\n\u2022 DNI del paciente\n\u2022 Credencial de la obra social (N\u00b0 de afiliado)\n\u2022 Domicilio\n\u2022 Datos de la escuela, CET o centro de d\u00eda, si va tambi\u00e9n ah\u00ed\n\u2022 Un tel\u00e9fono con WhatsApp\n\n\u2705 *Pasos:*\n1. Entr\u00e1 a este link: https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=k4xdsyxN_UCEoJNEh2WeyHBXutxkKM1AvQn1GmhiMpdUNUs4QjRCQ0VIVEZaVUxCMjBJNVA4QTBYRi4u\n2. Complet\u00e1 los datos del paciente *tal como figuran en el DNI*.\n3. Carg\u00e1 el domicilio y eleg\u00ed el destino: Rehabilitaci\u00f3n, Escuela o Ambos.\n4. Complet\u00e1 tu contacto y la obra social.\n5. Si te pide datos de padres y hermanos, completalos: tu obra social los exige.\n6. Toc\u00e1 *Enviar*.\n\n\u26a0\ufe0f *Importante:* lo que escribas sale impreso en el pedido m\u00e9dico. Revis\u00e1 bien nombre, DNI, domicilio y N\u00b0 de afiliado. Hac\u00e9 un formulario por cada paciente.\n\nCuando el pedido est\u00e9 listo y firmado, te lo mandamos por este medio. \u00a1Gracias!", LINK="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=k4xdsyxN_UCEoJNEh2WeyHBXutxkKM1AvQn1GmhiMpdUNUs4QjRCQ0VIVEZaVUxCMjBJNVA4QTBYRi4u";
 async function copiar(t,ok){try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}document.getElementById('estado').textContent=ok}
