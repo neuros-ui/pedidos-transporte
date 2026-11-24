@@ -3,477 +3,483 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Horarios de Terapias 2027 · NEUROS</title>
-<script src="pdf-lib.min.js"></script>
+<title>Horarios de Terapias 2027 — NEUROS</title>
 <style>
   :root{
-    --verde-oscuro:#0FA77F;
-    --verde-claro:#87D3BF;
-    --gris:#747480;
-    --gris-claro:#F4F5F6;
-    --borde:#D8DBDE;
-    --celeste:#2BA8C4;
-    --rosa:#C23B6B;
-    --naranja:#F0954B;
-    --violeta:#7B6FD1;
-    --bg:#F7F8FA;
+    --violeta: #6b3fa0;
+    --violeta-osc: #512e7a;
+    --naranja: #e07b2d;
+    --naranja-osc: #b85f1c;
+    --gris: #4a4a4a;
+    --bg: #f4f3f7;
   }
   *{box-sizing:border-box;}
   body{
-    font-family:'Segoe UI', Arial, sans-serif;
-    background:var(--bg);
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
     margin:0;
-    padding:24px;
-    color:#2E2E38;
+    color: var(--gris);
   }
-  .wrap{max-width:900px;margin:0 auto;}
-  header.app{
-    display:flex;align-items:center;gap:16px;margin-bottom:20px;
-  }
-  header.app img{height:46px;}
-  header.app h1{font-size:20px;margin:0;color:var(--gris);font-weight:700;}
-  header.app small{display:block;color:var(--verde-oscuro);font-weight:600;letter-spacing:.03em;font-size:12px;}
+  .wrap{ max-width: 820px; margin: 0 auto; padding: 24px 16px 60px; }
+  header{ display:flex; align-items:center; gap:12px; margin-bottom: 24px; }
+  header h1{ font-size: 20px; margin:0; color: var(--violeta-osc); }
   .card{
-    background:#fff;border:1px solid var(--borde);border-radius:14px;
-    padding:20px 22px;margin-bottom:18px;box-shadow:0 1px 3px rgba(20,20,30,.05);
+    background:#fff; border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    padding: 24px; margin-bottom: 20px;
   }
-  .card h2{
-    font-size:15px;margin:0 0 14px;color:var(--verde-oscuro);
-    text-transform:uppercase;letter-spacing:.04em;
+  label{ display:block; font-size: 13px; font-weight:600; margin-bottom:4px; color:#333; }
+  input[type=text], input[type=password]{
+    width:100%; padding:10px 12px; border:1px solid #cfd6d3;
+    border-radius:6px; font-size:15px; margin-bottom:14px;
   }
-  label{font-size:12.5px;color:var(--gris);display:block;margin-bottom:4px;font-weight:600;}
-  input[type=text], input[type=search], select{
-    width:100%;padding:8px 10px;border:1px solid var(--borde);border-radius:8px;
-    font-size:14px;background:#fff;
+  button{
+    border:none; border-radius:6px; padding:11px 18px;
+    font-size:15px; font-weight:600; cursor:pointer; color:#fff;
   }
-  .grid2{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:14px;}
-  .buscador{position:relative;margin-bottom:14px;}
-  #listaPacientes{
-    position:absolute;z-index:5;background:#fff;border:1px solid var(--borde);
-    border-radius:8px;max-height:220px;overflow:auto;width:100%;
-    box-shadow:0 6px 18px rgba(20,20,30,.12);display:none;
+  button.violeta{ background: var(--violeta); }
+  button.violeta:hover{ background: var(--violeta-osc); }
+  button.naranja{ background: var(--naranja); }
+  button.naranja:hover{ background: var(--naranja-osc); }
+  button:disabled{ background:#aab; cursor:not-allowed; opacity:.6; }
+  .fila{ display:flex; gap:12px; flex-wrap:wrap; }
+  .fila > *{ flex:1; min-width: 220px; }
+  #loginError, #estado{ font-size: 13px; margin-top: 6px; }
+  #loginError{ color:#b3261e; }
+  #estado.ok{ color: var(--violeta-osc); }
+  #estado.error{ color:#b3261e; }
+  .oculto{ display:none !important; }
+  .resultado{ border-top:1px solid #e3e7e5; margin-top:18px; padding-top:18px; }
+  .paciente-info{ background: #f3edf9; border-radius:8px; padding:14px 16px; margin-bottom:16px; font-size:14px; }
+  .paciente-info b{ color: var(--violeta-osc); }
+  table.horarios{ width:100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 13px; }
+  table.horarios th, table.horarios td{ border:1px solid #e0dbe8; padding:6px 8px; text-align:left; }
+  table.horarios th{ background:#f3edf9; }
+  .botones-pdf{ display:flex; gap:12px; flex-wrap:wrap; margin-top:10px;}
+  footer{ text-align:center; font-size:12px; color:#8a938f; margin-top: 30px; }
+  .badge{
+    display:inline-block; background:#fff3cd; color:#8a6d00;
+    border-radius:4px; padding:2px 8px; font-size:11px; font-weight:600;
+    margin-left:8px; vertical-align:middle;
   }
-  #listaPacientes div{padding:8px 10px;font-size:13.5px;cursor:pointer;border-bottom:1px solid #EFEFF2;}
-  #listaPacientes div:hover{background:var(--gris-claro);}
-  #listaPacientes div b{color:var(--verde-oscuro);}
-  table.horarios{width:100%;border-collapse:collapse;margin-top:6px;}
-  table.horarios th, table.horarios td{border:1px solid var(--borde);padding:6px;text-align:center;font-size:12.5px;}
-  table.horarios th{background:var(--verde-claro);color:#0b4f3e;font-weight:700;}
-  table.horarios td.prestacion{text-align:left;font-weight:600;background:var(--gris-claro);white-space:nowrap;padding-left:10px;}
-  table.horarios input{border:1px solid var(--borde);border-radius:6px;padding:4px;width:100%;font-size:12.5px;text-align:center;}
-  .fila-extra td.prestacion{color:var(--rosa);}
-  .botones{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
-  button.generar{
-    flex:1;min-width:240px;border:none;border-radius:10px;padding:13px 16px;
-    font-size:14px;font-weight:700;cursor:pointer;color:#fff;
-    display:flex;align-items:center;justify-content:center;gap:8px;
+  .sugerencias{
+    border:1px solid #e0dbe8; border-radius:8px; max-height:220px;
+    overflow-y:auto; margin-top:-8px; margin-bottom:14px; background:#fff;
   }
-  button.fam{background:var(--violeta);}
-  button.fam:hover{background:#6a5fc0;}
-  button.transp{background:var(--naranja);}
-  button.transp:hover{background:#dd8740;}
-  button.generar:disabled{background:#B7B7BE;cursor:not-allowed;}
-  .nota{font-size:12px;color:var(--gris);margin-top:10px;line-height:1.5;}
-  .estado{font-size:12.5px;margin-top:10px;min-height:18px;}
-  .ok{color:var(--verde-oscuro);font-weight:600;}
-  .err{color:var(--rosa);font-weight:600;}
-  .demo{background:#FFF4E6;border:1px solid var(--naranja);border-radius:10px;padding:10px 14px;font-size:12.5px;color:#8a5a1f;margin-bottom:18px;}
+  .sugerencias div{ padding:8px 12px; cursor:pointer; font-size:14px; }
+  .sugerencias div:hover{ background:#f3edf9; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header class="app">
-    <img src="logo_neuros.png" alt="NEUROS">
-    <div>
-      <h1>Generador de Horarios de Terapias</h1>
-      <small>CENTRO DE NEURORREHABILITACIÓN · AÑO 2027</small>
-    </div>
+  <header>
+    <img src="logo_neuros_small.png" alt="NEUROS" style="width:44px;height:44px;">
+    <h1>📅 Horarios de Terapias 2027 — NEUROS</h1>
   </header>
 
-  <div class="demo" id="avisoDemo">
-    Todavía no está cargado el listado completo de pacientes. Podés completar los datos a mano abajo, o buscar por
-    nombre/DNI una vez que se suba <code>pacientes.js</code> con el listado de PLANES 2027.
+  <div class="card" id="pantallaLogin">
+    <label for="passInput">Contraseña del personal de NEUROS</label>
+    <input type="password" id="passInput" placeholder="Ingresá la contraseña">
+    <button class="violeta" id="btnLogin">Entrar</button>
+    <div id="loginError"></div>
   </div>
 
-  <div class="card">
-    <h2>1. Elegí o cargá el paciente</h2>
-    <div class="buscador">
-      <label for="buscar">Buscar por nombre o DNI</label>
-      <input type="search" id="buscar" placeholder="Empezá a escribir…" autocomplete="off">
-      <div id="listaPacientes"></div>
+  <div id="pantallaApp" class="oculto">
+
+    <div class="card">
+      <label for="buscador">Buscar paciente (apellido, nombre o DNI)</label>
+      <input type="text" id="buscador" placeholder="Ej: Pérez, Juan o 30111222" autocomplete="off">
+      <div id="sugerencias" class="sugerencias oculto"></div>
+      <div id="estado"></div>
     </div>
-    <div class="grid2">
-      <div>
-        <label for="nombre">Nombre y Apellido</label>
-        <input type="text" id="nombre" placeholder="Ej: PEREZ JUAN">
+
+    <div class="card resultado oculto" id="tarjetaResultado">
+      <div class="paciente-info" id="infoPaciente"></div>
+
+      <div class="fila">
+        <div>
+          <label for="periodoRehab">Período de rehabilitación</label>
+          <input type="text" id="periodoRehab" placeholder="Ej: Marzo 2027">
+        </div>
+        <div>
+          <label for="periodoEsc">Período de escuela / CET / centro de día (si aplica)</label>
+          <input type="text" id="periodoEsc" placeholder="Dejar vacío si usa el mismo período">
+        </div>
       </div>
-      <div>
-        <label for="dni">DNI</label>
-        <input type="text" id="dni" placeholder="Ej: 45123456">
+
+      <div class="fila">
+        <div>
+          <label for="turnoSelect">Turno (para el nombre del archivo)</label>
+          <select id="turnoSelect" style="width:100%;padding:10px 12px;border:1px solid #cfd6d3;border-radius:6px;font-size:15px;margin-bottom:14px;">
+            <option value="MAÑANA">Mañana</option>
+            <option value="TARDE">Tarde</option>
+          </select>
+        </div>
+        <div>
+          <label for="obraSocialInput">Obra social (para el nombre del archivo)</label>
+          <input type="text" id="obraSocialInput" placeholder="Ej: OSDE">
+        </div>
       </div>
-      <div>
-        <label for="anio">Año</label>
-        <input type="text" id="anio" value="2027">
+
+      <div id="entradaSalidaPorDia"></div>
+
+      <h3 style="font-size:14px;color:var(--violeta-osc);margin-bottom:4px;">Horario — versión familia (con profesional)</h3>
+      <div id="tablaFamilia"></div>
+
+      <h3 style="font-size:14px;color:var(--naranja-osc);margin-bottom:4px;">Horario — versión transporte / obra social</h3>
+      <div id="tablaTransporte"></div>
+
+      <div class="botones-pdf">
+        <button class="violeta" id="btnPdfFamilia">📄 PDF para la familia</button>
+        <button class="naranja" id="btnPdfTransporte">📄 PDF para transporte / obra social</button>
       </div>
     </div>
+
   </div>
 
-  <div class="card">
-    <h2>2. Días y horarios por prestación</h2>
-    <table class="horarios" id="tablaHorarios">
-      <thead>
-        <tr>
-          <th style="text-align:left;">Prestación</th>
-          <th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- filas de prestaciones generadas por JS -->
-      </tbody>
-    </table>
-    <div class="nota">Estas filas van en los dos PDF. Dejá vacío un casillero si ese día no corresponde esa prestación.</div>
-  </div>
-
-  <div class="card">
-    <h2>3. Horario de entrada y salida (solo PDF familia)</h2>
-    <table class="horarios" id="tablaEntradaSalida">
-      <thead>
-        <tr>
-          <th style="text-align:left;">&nbsp;</th>
-          <th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="fila-extra">
-          <td class="prestacion">Horario de entrada</td>
-          <td><input data-fila="entrada" data-dia="0"></td>
-          <td><input data-fila="entrada" data-dia="1"></td>
-          <td><input data-fila="entrada" data-dia="2"></td>
-          <td><input data-fila="entrada" data-dia="3"></td>
-          <td><input data-fila="entrada" data-dia="4"></td>
-        </tr>
-        <tr class="fila-extra">
-          <td class="prestacion">Horario de salida</td>
-          <td><input data-fila="salida" data-dia="0"></td>
-          <td><input data-fila="salida" data-dia="1"></td>
-          <td><input data-fila="salida" data-dia="2"></td>
-          <td><input data-fila="salida" data-dia="3"></td>
-          <td><input data-fila="salida" data-dia="4"></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <h2>4. Generar los PDF</h2>
-    <div class="botones">
-      <button class="generar fam" id="btnFamilia">📄 PDF para la familia</button>
-      <button class="generar transp" id="btnTransporte">📄 PDF para transporte / obra social</button>
-    </div>
-    <div class="estado" id="estado"></div>
-    <div class="nota">
-      El PDF de <b>transporte / obra social</b> solo lleva la tabla de prestaciones y la nota para entregar.<br>
-      El PDF de <b>la familia</b> suma el horario de entrada y salida de cada día.
-    </div>
-  </div>
-
+  <footer>
+    Centro de Neurorrehabilitación NEUROS — Uso interno<span class="badge">EN CONSTRUCCIÓN</span>
+  </footer>
 </div>
 
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="pacientes_enc.js"></script>
+<script src="logo_const.js"></script>
 <script>
-const PRESTACIONES = ["Kinesiología","Terapia Ocupacional","Fonoaudiología","Psicología","Psicopedagogía","Psicomotricidad"];
-const DIAS = ["LUNES","MARTES","MIÉRCOLES","JUEVES","VIERNES"];
+/* ============================================================
+   HORARIOS DE TERAPIAS 2027 — NEUROS
+   Estado: versión con datos reales de 2027 PLANES.xlsx (T.Mañana
+   + T.Tarde), 237 pacientes, cargada el 24/11.
 
-// ---------- Listado de pacientes (PLANES 2027) ----------
-// Se completa con pacientes.js (array PACIENTES) cuando esté disponible.
-// Formato esperado por paciente:
-// { nombre:"APELLIDO NOMBRE", dni:"12345678",
-//   horarios:{ "Kinesiología":["10:00","","","10:00",""], ... },
-//   entrada:["08:00","","08:00","","08:00"], salida:["09:00","","09:00","","09:00"] }
-window.PACIENTES = window.PACIENTES || [
-  { nombre:"EJEMPLO DEMO PACIENTE", dni:"00000000",
-    horarios:{ "Kinesiología":["10:00","","10:00","",""],
-               "Terapia Ocupacional":["","11:00","","11:00",""],
-               "Fonoaudiología":["","","09:30","",""],
-               "Psicología":["14:00","","","","14:00"],
-               "Psicopedagogía":["","","","15:00",""],
-               "Psicomotricidad":["","08:30","","","08:30"] },
-    entrada:["08:00","08:00","08:00","08:00","08:00"],
-    salida:["15:00","12:00","11:00","16:00","15:00"] }
-];
+   FALTA PARA TERMINAR DE VERDAD:
+   1) Contraseña definitiva (ahora: placeholder "NEUROS2027" —
+      avisame la real y vuelvo a encriptar pacientes_enc.js)
+   2) Membrete de color de NEUROS (CERTIFICADO_NEUROS1_1.pdf) para
+      el isologo — por ahora el PDF usa el nombre en texto, sin logo
+   3) Confirmar diseño final de cada PDF (qué textos exactos van)
+   ============================================================ */
 
-// ---------- precarga desde la URL (botón "Horarios" de la lista de Transporte) ----------
-// Acepta ?nombre=APELLIDO%20NOMBRE&dni=12345678
-// o bien ?apellido=...&nombres=...&dni=...
+let BASE_PACIENTES = [];
+
+// ---- Login + desencriptado ----
+document.getElementById('btnLogin').addEventListener('click', intentarLogin);
+document.getElementById('passInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') intentarLogin();
+});
+
+async function intentarLogin(){
+  const pass = document.getElementById('passInput').value;
+  const err = document.getElementById('loginError');
+  err.textContent = '';
+  try{
+    const datos = await desencriptar(pass);
+    BASE_PACIENTES = datos;
+    document.getElementById('pantallaLogin').classList.add('oculto');
+    document.getElementById('pantallaApp').classList.remove('oculto');
+    precargarDesdeURL();
+  } catch(e){
+    err.textContent = 'Contraseña incorrecta.';
+  }
+}
+
+function b64ToBytes(b64){
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+async function desencriptar(password){
+  const enc = new TextEncoder();
+  const salt = b64ToBytes(PACIENTES_ENC.salt);
+  const iv = b64ToBytes(PACIENTES_ENC.iv);
+  const data = b64ToBytes(PACIENTES_ENC.data);
+
+  const baseKey = await crypto.subtle.importKey(
+    'raw', enc.encode(password), {name:'PBKDF2'}, false, ['deriveKey']
+  );
+  const key = await crypto.subtle.deriveKey(
+    {name:'PBKDF2', salt, iterations: PACIENTES_ENC.iterations, hash:'SHA-256'},
+    baseKey, {name:'AES-GCM', length:256}, false, ['decrypt']
+  );
+  const plainBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, data);
+  const text = new TextDecoder().decode(plainBuf);
+  return JSON.parse(text);
+}
+
+// ---- Precarga desde la URL (misma convención que Armar pedido) ----
+function leerParamsHash(){
+  const hash = window.location.hash.replace(/^#/, '');
+  const params = {};
+  hash.split('&').forEach(par => {
+    if (!par) return;
+    const [k, v] = par.split('=');
+    params[decodeURIComponent(k)] = decodeURIComponent((v || '').replace(/\+/g, ' '));
+  });
+  return params;
+}
+
 function precargarDesdeURL(){
-  const qs = new URLSearchParams(window.location.search);
-  let nombre = qs.get('nombre');
-  const apellido = qs.get('apellido');
-  const nombres = qs.get('nombres');
-  const dni = qs.get('dni');
-  if(!nombre && (apellido || nombres)) nombre = [apellido, nombres].filter(Boolean).join(' ');
-  if(nombre) document.getElementById('nombre').value = nombre.trim();
-  if(dni) document.getElementById('dni').value = dni.trim();
-  if(nombre || dni){
-    const p = (window.PACIENTES||[]).find(p => p.dni === (dni||'').trim());
-    if(p) cargarPaciente(p);
+  const p = leerParamsHash();
+  if (p.dni){
+    document.getElementById('buscador').value = p.dni;
+    buscarPaciente();
+  } else if (p.ap || p.no){
+    const texto = [p.ap, p.no].filter(Boolean).join(' ');
+    document.getElementById('buscador').value = texto.trim();
+    buscarPaciente();
   }
 }
 
-// ---------- construir filas de la tabla principal ----------
-const tbody = document.querySelector('#tablaHorarios tbody');
-PRESTACIONES.forEach(p=>{
-  const tr = document.createElement('tr');
-  tr.innerHTML = `<td class="prestacion">${p}</td>` +
-    [0,1,2,3,4].map(d=>`<td><input data-prestacion="${p}" data-dia="${d}"></td>`).join('');
-  tbody.appendChild(tr);
+// ---- Buscador ----
+const buscadorInput = document.getElementById('buscador');
+const sugerenciasBox = document.getElementById('sugerencias');
+
+buscadorInput.addEventListener('input', () => mostrarSugerencias(buscadorInput.value));
+buscadorInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { sugerenciasBox.classList.add('oculto'); buscarPaciente(); }
+});
+document.addEventListener('click', e => {
+  if (!sugerenciasBox.contains(e.target) && e.target !== buscadorInput){
+    sugerenciasBox.classList.add('oculto');
+  }
 });
 
-// ---------- buscador ----------
-const inputBuscar = document.getElementById('buscar');
-const lista = document.getElementById('listaPacientes');
-const avisoDemo = document.getElementById('avisoDemo');
-if (window.PACIENTES.length > 1) avisoDemo.style.display = 'none';
+function normaliza(s){
+  return (s||'').toString().toUpperCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
 
-inputBuscar.addEventListener('input', ()=>{
-  const q = inputBuscar.value.trim().toLowerCase();
-  lista.innerHTML = '';
-  if(!q){ lista.style.display='none'; return; }
-  const res = window.PACIENTES.filter(p =>
-    p.nombre.toLowerCase().includes(q) || p.dni.includes(q)
-  ).slice(0,30);
-  if(res.length===0){ lista.style.display='none'; return; }
-  res.forEach(p=>{
-    const div = document.createElement('div');
-    div.innerHTML = `<b>${p.nombre}</b> — DNI ${p.dni}`;
-    div.onclick = ()=> cargarPaciente(p);
-    lista.appendChild(div);
-  });
-  lista.style.display='block';
-});
-document.addEventListener('click', (e)=>{
-  if(!lista.contains(e.target) && e.target!==inputBuscar) lista.style.display='none';
-});
-
-function cargarPaciente(p){
-  document.getElementById('nombre').value = p.nombre;
-  document.getElementById('dni').value = p.dni;
-  inputBuscar.value = p.nombre;
-  lista.style.display='none';
-  PRESTACIONES.forEach(pr=>{
-    [0,1,2,3,4].forEach(d=>{
-      const el = document.querySelector(`input[data-prestacion="${pr}"][data-dia="${d}"]`);
-      const val = (p.horarios && p.horarios[pr] && p.horarios[pr][d]) || '';
-      if(el) el.value = val;
+function mostrarSugerencias(q){
+  const qn = normaliza(q).trim();
+  if (!qn || qn.length < 2){ sugerenciasBox.classList.add('oculto'); sugerenciasBox.innerHTML=''; return; }
+  const matches = BASE_PACIENTES.filter(p =>
+    normaliza(p.nombre).includes(qn) || (p.dni||'').includes(qn)
+  ).slice(0, 15);
+  if (matches.length === 0){ sugerenciasBox.classList.add('oculto'); sugerenciasBox.innerHTML=''; return; }
+  sugerenciasBox.innerHTML = matches.map(p =>
+    `<div data-dni="${p.dni}">${escapeHtml(p.nombre)} — DNI ${escapeHtml(p.dni)}</div>`
+  ).join('');
+  sugerenciasBox.classList.remove('oculto');
+  sugerenciasBox.querySelectorAll('div').forEach(div => {
+    div.addEventListener('click', () => {
+      buscadorInput.value = div.dataset.dni;
+      sugerenciasBox.classList.add('oculto');
+      buscarPaciente();
     });
   });
-  [0,1,2,3,4].forEach(d=>{
-    const e1 = document.querySelector(`input[data-fila="entrada"][data-dia="${d}"]`);
-    const s1 = document.querySelector(`input[data-fila="salida"][data-dia="${d}"]`);
-    if(e1) e1.value = (p.entrada && p.entrada[d]) || '';
-    if(s1) s1.value = (p.salida && p.salida[d]) || '';
+}
+
+let pacienteActual = null;
+
+function buscarPaciente(){
+  const q = buscadorInput.value.trim();
+  const qn = normaliza(q);
+  const estado = document.getElementById('estado');
+  const tarjeta = document.getElementById('tarjetaResultado');
+
+  if (!q){ estado.textContent = ''; tarjeta.classList.add('oculto'); return; }
+
+  const exactoDni = BASE_PACIENTES.find(p => p.dni === q.replace(/\D/g,''));
+  const porNombre = BASE_PACIENTES.filter(p => normaliza(p.nombre).includes(qn));
+  const encontrado = exactoDni || (porNombre.length === 1 ? porNombre[0] : null);
+
+  if (!encontrado){
+    estado.className = 'error';
+    estado.textContent = porNombre.length > 1
+      ? `Hay ${porNombre.length} pacientes que coinciden — elegí uno de la lista de sugerencias.`
+      : 'No se encontró ningún paciente con ese dato.';
+    tarjeta.classList.add('oculto');
+    pacienteActual = null;
+    return;
+  }
+
+  pacienteActual = encontrado;
+  estado.textContent = '';
+  mostrarPaciente(encontrado);
+  tarjeta.classList.remove('oculto');
+}
+
+const DIAS = ['LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES'];
+
+function tablaHorarios(horarios){
+  const prestaciones = Object.keys(horarios);
+  if (prestaciones.length === 0){
+    return '<p style="font-size:13px;color:#888;">Sin datos cargados — a completar por la coordinadora.</p>';
+  }
+  let html = '<table class="horarios"><tr><th>Prestación</th>' + DIAS.map(d=>`<th>${d}</th>`).join('') + '</tr>';
+  prestaciones.forEach(pres => {
+    html += `<tr><td>${escapeHtml(pres)}</td>` +
+      DIAS.map(d => `<td>${escapeHtml(horarios[pres][d] || '')}</td>`).join('') +
+      '</tr>';
   });
+  html += '</table>';
+  return html;
 }
 
-// ---------- lectura del formulario ----------
-function leerFormulario(){
-  const nombre = document.getElementById('nombre').value.trim() || 'SIN NOMBRE';
-  const dni = document.getElementById('dni').value.trim();
-  const anio = document.getElementById('anio').value.trim() || '2027';
-  const horarios = {};
-  PRESTACIONES.forEach(pr=>{
-    horarios[pr] = [0,1,2,3,4].map(d=>{
-      const el = document.querySelector(`input[data-prestacion="${pr}"][data-dia="${d}"]`);
-      return el ? el.value.trim() : '';
-    });
-  });
-  const entrada = [0,1,2,3,4].map(d=> (document.querySelector(`input[data-fila="entrada"][data-dia="${d}"]`)||{}).value || '');
-  const salida  = [0,1,2,3,4].map(d=> (document.querySelector(`input[data-fila="salida"][data-dia="${d}"]`)||{}).value || '');
-  return {nombre, dni, anio, horarios, entrada, salida};
+function diasConTransporte(p){
+  const base = (p.horariosTransporte && Object.keys(p.horariosTransporte).length) ? p.horariosTransporte : (p.horariosFamilia || {});
+  const set = new Set();
+  Object.values(base).forEach(porDia => { DIAS.forEach(d => { if (porDia[d]) set.add(d); }); });
+  return DIAS.filter(d => set.has(d));
 }
 
-// ---------- generación de PDF ----------
-const { PDFDocument, rgb, StandardFonts } = PDFLib;
+function mostrarPaciente(p){
+  document.getElementById('infoPaciente').innerHTML =
+    `<b>${escapeHtml(p.nombre)}</b> — DNI ${escapeHtml(p.dni)}` +
+    (p.obraSocial ? ` — Obra social: ${escapeHtml(p.obraSocial)}` : '');
+  document.getElementById('tablaFamilia').innerHTML = tablaHorarios(p.horariosFamilia || {});
+  document.getElementById('tablaTransporte').innerHTML = tablaHorarios(p.horariosTransporte || {});
 
-async function cargarLogoBytes(){
-  const r = await fetch('logo_neuros.png');
-  return await r.arrayBuffer();
+  document.getElementById('turnoSelect').value = (p.turno === 'tarde') ? 'TARDE' : 'MAÑANA';
+  document.getElementById('obraSocialInput').value = p.obraSocial || '';
+
+  const dias = diasConTransporte(p);
+  const cont = document.getElementById('entradaSalidaPorDia');
+  if (dias.length === 0){
+    cont.innerHTML = '<p style="font-size:13px;color:#888;">Sin días de transporte cargados todavía.</p>';
+  } else {
+    cont.innerHTML = '<label style="margin-bottom:8px;">Horario de entrada y salida de transporte (puede variar por día)</label>' +
+      dias.map(d => `
+        <div class="fila">
+          <div><label for="e_${d}">Entrada ${d}</label><input type="text" id="e_${d}" class="horaEntradaDia" data-dia="${d}" placeholder="Ej: 08:30"></div>
+          <div><label for="s_${d}">Salida ${d}</label><input type="text" id="s_${d}" class="horaSalidaDia" data-dia="${d}" placeholder="Ej: 12:00"></div>
+        </div>
+      `).join('');
+  }
 }
 
-function hex(h){
-  h = h.replace('#','');
-  return rgb(parseInt(h.substr(0,2),16)/255, parseInt(h.substr(2,2),16)/255, parseInt(h.substr(4,2),16)/255);
+function escapeHtml(s){
+  return (s||'').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-const COL_VERDE_OSC = hex('0FA77F');
-const COL_VERDE_CLA = hex('87D3BF');
-const COL_GRIS = hex('747480');
-const COL_GRIS_CLARO = hex('F4F5F6');
-const COL_BORDE = hex('C9CCD1');
-const COL_VIOLETA = hex('7B6FD1');
-const COL_NARANJA = hex('F0954B');
-const COL_BLANCO = rgb(1,1,1);
-const COL_NEGRO = rgb(0.15,0.15,0.18);
 
-async function construirPDF({incluirEntradaSalida, colorCinta, textoCinta, textoNota}){
-  const datos = leerFormulario();
+// ---- Generación de PDF ----
+document.getElementById('btnPdfFamilia').addEventListener('click', () => generarPDF('familia'));
+document.getElementById('btnPdfTransporte').addEventListener('click', () => generarPDF('transporte'));
+
+async function generarPDF(tipo){
+  if (!pacienteActual){ alert('Primero buscá un paciente.'); return; }
+
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595.28, 841.89]); // A4
-  const W = 595.28, H = 841.89;
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const page = pdfDoc.addPage([595, 842]); // A4
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const logoBytes = await cargarLogoBytes();
-  const logoImg = await pdfDoc.embedPng(logoBytes);
-  const logoW = 150, logoH = logoW * (logoImg.height/logoImg.width);
-  page.drawImage(logoImg, {x:40, y:H-40-logoH, width:logoW, height:logoH});
+  const colorTitulo = tipo === 'familia' ? rgb(0.42, 0.25, 0.63) : rgb(0.88, 0.48, 0.18);
+  const tituloDoc = tipo === 'familia' ? 'HORARIOS DE TERAPIAS 2027 — PARA LA FAMILIA' : 'HORARIOS DE TERAPIAS 2027 — TRANSPORTE / OBRA SOCIAL';
 
-  // cinta de color arriba a la derecha
-  const cintaW = 170, cintaH = 30;
-  page.drawRectangle({x:W-40-cintaW, y:H-40-cintaH, width:cintaW, height:cintaH, color:colorCinta});
-  page.drawText(textoCinta, {
-    x: W-40-cintaW + (cintaW - fontBold.widthOfTextAtSize(textoCinta,11))/2,
-    y: H-40-cintaH + (cintaH-11)/2 + 1,
-    size:11, font:fontBold, color: COL_BLANCO
+  const periodoRehab = document.getElementById('periodoRehab').value;
+  const periodoEsc = document.getElementById('periodoEsc').value;
+  const obraSocial = (document.getElementById('obraSocialInput').value || '').trim();
+  const horarios = tipo === 'familia' ? (pacienteActual.horariosFamilia || {}) : (pacienteActual.horariosTransporte || {});
+
+  const entradaSalidaPorDia = {};
+  document.querySelectorAll('.horaEntradaDia').forEach(inp => {
+    entradaSalidaPorDia[inp.dataset.dia] = entradaSalidaPorDia[inp.dataset.dia] || {};
+    entradaSalidaPorDia[inp.dataset.dia].entrada = inp.value;
   });
-
-  // título
-  let y = H - 40 - logoH - 36;
-  page.drawText(`HORARIOS DE TERAPIAS ${datos.anio}`, {x:40, y, size:18, font:fontBold, color:COL_VERDE_OSC});
-  y -= 28;
-
-  // datos paciente
-  page.drawText('Nombre y Apellido:', {x:40, y, size:11, font:fontBold, color:COL_GRIS});
-  page.drawText(datos.nombre, {x:170, y, size:11, font, color:COL_NEGRO});
-  y -= 18;
-  page.drawText('DNI:', {x:40, y, size:11, font:fontBold, color:COL_GRIS});
-  page.drawText(datos.dni, {x:170, y, size:11, font, color:COL_NEGRO});
-  y -= 30;
-
-  // ---- tabla ----
-  const colLabelW = 150;
-  const colDiaW = (W - 80 - colLabelW) / 5;
-  const filaH = 24;
-  const filas = PRESTACIONES.slice();
-  const filasExtra = incluirEntradaSalida ? ['Horario de entrada','Horario de salida'] : [];
-  const totalFilas = filas.length + filasExtra.length;
-  const tablaTop = y;
-  const tablaH = filaH * (totalFilas + 1);
-  const tablaX = 40;
-
-  // encabezado
-  page.drawRectangle({x:tablaX, y:tablaTop-filaH, width: colLabelW, height:filaH, color:COL_VERDE_CLA});
-  DIAS.forEach((d,i)=>{
-    page.drawRectangle({x:tablaX+colLabelW+colDiaW*i, y:tablaTop-filaH, width:colDiaW, height:filaH, color:COL_VERDE_CLA});
-    const tw = fontBold.widthOfTextAtSize(d,9);
-    page.drawText(d, {x: tablaX+colLabelW+colDiaW*i + (colDiaW-tw)/2, y: tablaTop-filaH+8, size:9, font:fontBold, color: rgb(0.03,0.31,0.25)});
+  document.querySelectorAll('.horaSalidaDia').forEach(inp => {
+    entradaSalidaPorDia[inp.dataset.dia] = entradaSalidaPorDia[inp.dataset.dia] || {};
+    entradaSalidaPorDia[inp.dataset.dia].salida = inp.value;
   });
+  const diasEntradaSalida = DIAS.filter(d => entradaSalidaPorDia[d]);
 
-  // filas de prestaciones + extra
-  let rowY = tablaTop - filaH;
-  const todasFilas = filas.map(p=>({label:p, valores:datos.horarios[p]}))
-    .concat(incluirEntradaSalida ? [
-      {label:'Horario de entrada', valores: datos.entrada},
-      {label:'Horario de salida', valores: datos.salida}
-    ] : []);
+  // Logo NEUROS (arriba a la derecha)
+  try{
+    const logoBytes = b64ToBytes(LOGO_NEUROS_B64);
+    const logoImg = await pdfDoc.embedPng(logoBytes);
+    const logoDim = logoImg.scale(50/logoImg.width);
+    page.drawImage(logoImg, { x: 595-50-50, y: 842-50-30, width: logoDim.width, height: logoDim.height });
+  } catch(e){ /* si falla, sigue sin logo */ }
 
-  todasFilas.forEach((fila, idx)=>{
-    rowY -= filaH;
-    const bg = idx % 2 === 0 ? COL_GRIS_CLARO : COL_BLANCO;
-    page.drawRectangle({x:tablaX, y:rowY, width:colLabelW, height:filaH, color:bg});
-    page.drawText(fila.label, {x: tablaX+8, y: rowY+8, size:9.5, font:fontBold, color: COL_GRIS});
-    DIAS.forEach((d,i)=>{
-      page.drawRectangle({x:tablaX+colLabelW+colDiaW*i, y:rowY, width:colDiaW, height:filaH, color:COL_BLANCO});
-      const val = fila.valores[i] || '';
-      if(val){
-        const tw = font.widthOfTextAtSize(val,9.5);
-        page.drawText(val, {x: tablaX+colLabelW+colDiaW*i + (colDiaW-tw)/2, y: rowY+8, size:9.5, font, color: COL_NEGRO});
-      }
+  let y = 800;
+  const draw = (text, opts={}) => {
+    page.drawText(text, { x: opts.x ?? 50, y, size: opts.size ?? 11, font: opts.bold ? fontBold : font, color: opts.color ?? rgb(0,0,0) });
+    y -= opts.gap ?? 20;
+  };
+
+  draw('NEUROS — Centro de Neurorrehabilitación', { bold:true, size:14, color: colorTitulo, gap: 20 });
+  draw(tituloDoc, { bold:true, size:12, color: colorTitulo, gap: 28 });
+
+  draw('Paciente: ' + pacienteActual.nombre, { bold:true });
+  draw('DNI: ' + pacienteActual.dni);
+  draw('Período de rehabilitación: ' + (periodoRehab || '-'));
+  if (periodoEsc) draw('Período de escuela / CET / centro de día: ' + periodoEsc);
+
+  if (tipo === 'familia'){
+    if (diasEntradaSalida.length){
+      draw('Horario de entrada y salida (transporte):', { bold:true, gap: 16 });
+      diasEntradaSalida.forEach(d => {
+        const e = entradaSalidaPorDia[d];
+        draw(d + ': entrada ' + (e.entrada || '-') + ' — salida ' + (e.salida || '-'), { size:10, gap: 15 });
+      });
+      y -= 8;
+    } else {
+      draw('Horario de entrada y salida (transporte): a completar', { gap: 26 });
+    }
+  } else {
+    draw('Entregar en: ' + (obraSocial || 'su obra social') + ' y/o servicio de transporte', { gap: 26, bold:true });
+  }
+
+  // Tabla de horarios
+  draw('Días y horarios por prestación:', { bold:true, gap: 20 });
+  const prestaciones = Object.keys(horarios);
+  if (prestaciones.length === 0){
+    draw('(a completar por la coordinadora)', { size:10 });
+  } else {
+    const colX = [50, 230, 290, 350, 410, 470];
+    draw('Prestación', { x: colX[0], bold:true, size:10, gap:0 });
+    ['LUN','MAR','MIÉ','JUE','VIE'].forEach((d,i) => {
+      page.drawText(d, { x: colX[i+1], y, size:10, font: fontBold });
     });
-  });
-
-  // bordes de la tabla (grid)
-  const totalFilasConHeader = totalFilas+1;
-  for(let i=0;i<=totalFilasConHeader;i++){
-    const ly = tablaTop - filaH*i;
-    page.drawLine({start:{x:tablaX,y:ly}, end:{x:tablaX+colLabelW+colDiaW*5,y:ly}, thickness:0.75, color:COL_BORDE});
-  }
-  for(let i=0;i<=5;i++){
-    const lx = tablaX+colLabelW+colDiaW*i;
-    page.drawLine({start:{x:lx,y:tablaTop}, end:{x:lx,y:tablaTop-filaH*totalFilasConHeader}, thickness:0.75, color:COL_BORDE});
-  }
-  page.drawLine({start:{x:tablaX,y:tablaTop}, end:{x:tablaX,y:tablaTop-filaH*totalFilasConHeader}, thickness:0.75, color:COL_BORDE});
-
-  // nota
-  let notaY = tablaTop - filaH*totalFilasConHeader - 26;
-  if(textoNota){
-    page.drawText(textoNota, {x:40, y:notaY, size:10, font:fontBold, color: COL_NARANJA});
+    y -= 16;
+    prestaciones.forEach(pres => {
+      page.drawText(pres, { x: colX[0], y, size:10, font });
+      DIAS.forEach((dia, i) => {
+        const hora = (horarios[pres][dia] || '-');
+        page.drawText(hora, { x: colX[i+1], y, size:10, font });
+      });
+      y -= 16;
+    });
   }
 
-  // footer
-  page.drawLine({start:{x:40,y:60}, end:{x:W-40,y:60}, thickness:1.2, color:COL_VERDE_CLA});
-  const footer = 'AV. Colón 4440, X5003DEO, CÓRDOBA  |  +54 0351 484-8900/01  |  centroneuros.com.ar  |  info@centroneuros.com.ar';
-  page.drawText(footer, {x:40, y:45, size:7.8, font, color:COL_GRIS});
-
-  return pdfDoc;
-}
-
-function nombreArchivo(sufijo){
-  const d = leerFormulario();
-  const limpio = (d.nombre||'PACIENTE').replace(/[^A-Za-z0-9ÁÉÍÓÚÑáéíóúñ ]/g,'').trim().replace(/\s+/g,'_').toUpperCase();
-  return `${limpio}_${d.dni||'SINDNI'}_${sufijo}_${d.anio}.pdf`;
-}
-
-async function descargarPDF(pdfDoc, nombreArch){
   const bytes = await pdfDoc.save();
-  const blob = new Blob([bytes], {type:'application/pdf'});
+
+  const turno = document.getElementById('turnoSelect').value; // MAÑANA o TARDE
+  const tipoLabel = tipo === 'familia' ? 'PARA LA FAMILIA' : (obraSocial || 'PARA LA OBRA SOCIAL');
+  const nombrePaciente = (pacienteActual.nombre || 'PACIENTE').toUpperCase();
+  let nombreArchivo = `${turno}-${tipoLabel}-${nombrePaciente}.pdf`;
+  nombreArchivo = nombreArchivo.replace(/[\\/:*?"<>|]/g, '');
+
+  // Si el navegador soporta elegir carpeta de guardado (Chrome/Edge), se usa esa ventana nativa.
+  if (window.showSaveFilePicker){
+    try{
+      const handle = await window.showSaveFilePicker({
+        suggestedName: nombreArchivo,
+        types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(bytes);
+      await writable.close();
+      return;
+    } catch(err){
+      if (err && err.name === 'AbortError') return; // la coordinadora canceló el diálogo
+      // si falla por otro motivo, sigue con la descarga normal más abajo
+    }
+  }
+
+  const blob = new Blob([bytes], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = nombreArch;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
-
-const estado = document.getElementById('estado');
-function setEstado(msg, ok){
-  estado.textContent = msg;
-  estado.className = 'estado ' + (ok ? 'ok' : 'err');
-}
-
-document.getElementById('btnFamilia').addEventListener('click', async ()=>{
-  try{
-    setEstado('Generando PDF para la familia…', true);
-    const pdfDoc = await construirPDF({
-      incluirEntradaSalida:true,
-      colorCinta: COL_VIOLETA,
-      textoCinta: 'PARA LA FAMILIA',
-      textoNota: ''
-    });
-    await descargarPDF(pdfDoc, nombreArchivo('FAMILIA'));
-    setEstado('Listo. Se descargó el PDF para la familia.', true);
-  }catch(e){
-    console.error(e);
-    setEstado('Hubo un error generando el PDF. Revisá la consola.', false);
-  }
-});
-
-precargarDesdeURL();
-
-document.getElementById('btnTransporte').addEventListener('click', async ()=>{
-  try{
-    setEstado('Generando PDF para transporte / obra social…', true);
-    const pdfDoc = await construirPDF({
-      incluirEntradaSalida:false,
-      colorCinta: COL_NARANJA,
-      textoCinta: 'TRANSPORTE / O.S.',
-      textoNota: '* Entregar en su obra social y/o servicio de transporte.'
-    });
-    await descargarPDF(pdfDoc, nombreArchivo('TRANSPORTE'));
-    setEstado('Listo. Se descargó el PDF para transporte / obra social.', true);
-  }catch(e){
-    console.error(e);
-    setEstado('Hubo un error generando el PDF. Revisá la consola.', false);
-  }
-});
 </script>
 </body>
 </html>
